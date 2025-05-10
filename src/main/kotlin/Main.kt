@@ -1,16 +1,19 @@
 package org.example
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-fun main() {
-    val name = "Kotlin"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+import java.net.URLEncoder
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
-    }
+fun main() {
+    val clientId = System.getenv("CLIENT_ID")
+    val redirectUri = URLEncoder.encode("urn:ietf:wg:oauth:2.0:oob", "UTF-8")
+    val scope = URLEncoder.encode("https://www.googleapis.com/auth/youtube.readonly", "UTF-8")
+
+    val authorizationUrl = "https://accounts.google.com/o/oauth2/auth?" +
+            "client_id=$clientId&" +
+            "redirect_uri=$redirectUri&" +
+            "response_type=code&" +
+            "scope=$scope&" +
+            "access_type=offline&" +
+            "prompt=consent"
+
+    println("Please open the following URL in your browser:\n$authorizationUrl")
 }
