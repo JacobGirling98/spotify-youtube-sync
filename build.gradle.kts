@@ -18,15 +18,16 @@ dependencies {
     implementation("org.http4k:http4k-core")
     implementation("org.http4k:http4k-server-undertow")
     implementation("org.http4k:http4k-client-apache")
+    implementation("org.http4k:http4k-format-jackson")
 
     implementation("io.arrow-kt:arrow-core:2.1.0")
 
     testImplementation(kotlin("test"))
 
-    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
-    testImplementation("io.kotest:kotest-extensions-jvm:${kotestVersion}")
     testImplementation("io.kotest.extensions:kotest-assertions-arrow:2.0.0")
+
+    testImplementation("org.http4k:http4k-testing-kotest")
 }
 
 tasks.withType<Test>().configureEach {

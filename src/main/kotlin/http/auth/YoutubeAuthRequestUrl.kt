@@ -2,7 +2,7 @@ package org.example.http.auth
 
 import java.net.URLEncoder
 
-fun youtubeAuthRequest(clientId: String): String {
+fun youtubeAuthRequestUrl(clientId: String): String {
     val redirectUri: String = URLEncoder.encode("urn:ietf:wg:oauth:2.0:oob", "UTF-8")
     val scope: String = URLEncoder.encode("https://www.googleapis.com/auth/youtube.readonly", "UTF-8")
 

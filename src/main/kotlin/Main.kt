@@ -1,19 +1,26 @@
 package org.example
 
-import java.net.URLEncoder
+import arrow.core.getOrElse
+import org.example.config.loadEnvironmentVariables
+import org.example.http.auth.spotifyAuthRequestUrl
+import org.example.http.auth.youtubeAuthRequestUrl
+import org.example.http.server.routes
+import org.example.http.server.spotifyRedirectHandler
+import org.http4k.client.ApacheClient
+import org.http4k.core.Method
+import org.http4k.core.Request
+import org.http4k.server.Undertow
+import org.http4k.server.asServer
 
 fun main() {
-    val clientId = System.getenv("CLIENT_ID")
-    val redirectUri = URLEncoder.encode("urn:ietf:wg:oauth:2.0:oob", "UTF-8")
-    val scope = URLEncoder.encode("https://www.googleapis.com/auth/youtube.readonly", "UTF-8")
+    val environment = loadEnvironmentVariables().getOrElse { error(it.message) }
 
-    val authorizationUrl = "https://accounts.google.com/o/oauth2/auth?" +
-            "client_id=$clientId&" +
-            "redirect_uri=$redirectUri&" +
-            "response_type=code&" +
-            "scope=$scope&" +
-            "access_type=offline&" +
-            "prompt=consent"
+    val app = routes(spotifyRedirectHandler { println(it) }).asServer(Undertow(8000)).start()
 
-    println("Please open the following URL in your browser:\n$authorizationUrl")
+    val youtubeAuthUrl = youtubeAuthRequestUrl(environment.youtubeClientId)
+    val spotifyAuthUrl = spotifyAuthRequestUrl(environment.spotifyClientId)
+
+    app.stop()
+
+    println(spotifyAuthUrl)
 }
