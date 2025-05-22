@@ -8,7 +8,12 @@ import kotlin.test.Test
 class EnvironmentTest {
     @Test
     fun `loads when all variables are set`() {
-        loadEnvironmentVariables { envVariableMap[it] } shouldBeRight EnvironmentVariables("YOUTUBE-ID", "SPOTIFY-ID")
+        loadEnvironmentVariables { envVariableMap[it] } shouldBeRight EnvironmentVariables(
+            "YOUTUBE-ID",
+            "SPOTIFY-ID",
+            "YOUTUBE-SECRET",
+            "SPOTIFY-SECRET"
+        )
     }
 
     @Test
@@ -25,11 +30,27 @@ class EnvironmentTest {
         loadEnvironmentVariables { envVariableNotSet[it] } shouldBeLeft ConfigError.SpotifyClientIdNotSet
     }
 
+    @Test
+    fun `fails to load when YOUTUBE_CLIENT_SECRET is not set`() {
+        val envVariableNotSet = envVariableMap.withEmptyValueOf(YouTubeClientSecret)
+
+        loadEnvironmentVariables { envVariableNotSet[it] } shouldBeLeft ConfigError.YouTubeClientSecretNotSet
+    }
+
+    @Test
+    fun `fails to load when SPOTIFY_CLIENT_SECRET is not set`() {
+        val envVariableNotSet = envVariableMap.withEmptyValueOf(SpotifyClientSecret)
+
+        loadEnvironmentVariables { envVariableNotSet[it] } shouldBeLeft ConfigError.SpotifyClientSecretNotSet
+    }
+
 }
 
 private val envVariableMap = mutableMapOf(
     YouTubeClientId.name to "YOUTUBE-ID",
-    SpotifyClientId.name to "SPOTIFY-ID"
+    SpotifyClientId.name to "SPOTIFY-ID",
+    YouTubeClientSecret.name to "YOUTUBE-SECRET",
+    SpotifyClientSecret.name to "SPOTIFY-SECRET"
 )
 
 private fun Map<String, String>.withEmptyValueOf(envVariable: EnvVariable) =
