@@ -7,6 +7,7 @@ import org.http4k.core.queries
 
 fun spotifyRedirectHandler(onRequest: (String) -> Unit): HttpHandler = { request ->
     val query = request.uri.queries()
-    println(query)
+    val code = query.firstOrNull { (first, _) -> first.lowercase() == "code" }?.second ?: "not a code!"
+    onRequest(code)
     Response(Status.OK)
 }
