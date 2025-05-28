@@ -1,10 +1,18 @@
 package org.example.http.server
 
+import org.example.http.auth.SpotifyAuth
+import org.example.http.auth.YouTubeAuth
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 
-fun routes(spotifyRedirectHandler: HttpHandler): HttpHandler = routes(
-    "/spotify_callback" bind GET to spotifyRedirectHandler
+fun routes(
+    spotifyConfig: SpotifyAuth,
+    youtubeConfig: YouTubeAuth,
+    spotifyRedirectHandler: HttpHandler,
+    youtubeRedirectHandler: HttpHandler
+): HttpHandler = routes(
+    spotifyConfig.internalRedirectUri bind GET to spotifyRedirectHandler,
+    youtubeConfig.internalRedirectUri bind GET to youtubeRedirectHandler
 )

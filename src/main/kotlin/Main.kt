@@ -11,9 +11,18 @@ import org.http4k.server.asServer
 
 fun main() {
     val environment = loadEnvironmentVariables().getOrElse { error(it.message) }
+    val serverUri = "http://127.0.0.1:8000"
 
-    val app = routes(redirectHandler { println(it) }).asServer(Undertow(8000)).start()
+    val spotifyConfig = SpotifyAuth(serverUri)
+    val youtubeConfig = YouTubeAuth(serverUri)
 
-    println(YouTubeAuth.codeUri(environment.youtubeClientId))
-    println(SpotifyAuth.codeUri(environment.spotifyClientId))
+    val app = routes(
+        spotifyConfig,
+        youtubeConfig,
+        redirectHandler { println("Spotify: $it") },
+        redirectHandler { println("Youtube: $it") }
+    ).asServer(Undertow(8000)).start()
+
+    println(youtubeConfig.codeUri(environment.youtubeClientId))
+    println(spotifyConfig.codeUri(environment.spotifyClientId))
 }
