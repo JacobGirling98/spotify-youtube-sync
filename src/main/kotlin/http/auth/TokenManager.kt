@@ -1,7 +1,7 @@
 package org.example.http.auth
 
 import arrow.core.Either
-import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.raise.either
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
@@ -22,20 +22,20 @@ class TokenManager(
 
     private var tokenState: Either<GetTokenError, TokenState> = Either.Left(TokenNotSet)
 
-    fun token(): Either<GetTokenError, AccessToken> {
-        val token = if (tokenState.isLeft { it is TokenNotSet }) retrieveToken { fetchToken(authCode) } else tokenState
+    fun token(): Either<GetTokenError, AccessToken> = either {
+        val state = tokenState.getOrElse { retrieveToken { fetchToken(authCode) }.bind() }
 
-        val newToken = token.flatMap {
-            if (it.expiration <= clock.now()) retrieveToken { refreshToken(it.token) } else Either.Right(it)
+        val refreshedState = if (state.expiration <= clock.now()) {
+            retrieveToken { refreshToken(state.token) }.bind()
+        } else {
+            state
         }
 
-        tokenState = newToken
-
-        return newToken.map { it.token.accessToken }
+        tokenState = Either.Right(refreshedState)
+        refreshedState.token.accessToken
     }
 
-    private fun retrieveToken(fn: () -> Either<GetTokenError, Token>): Either<GetTokenError, TokenState> = either {
-        val token = fn().bind()
-        TokenState(token, clock.now().plus(token.expiresIn.value.seconds))
+    private inline fun retrieveToken(fn: () -> Either<GetTokenError, Token>) = either {
+        fn().bind().let { TokenState(it, clock.now().plus(it.expiresIn.value.seconds)) }
     }
 }
