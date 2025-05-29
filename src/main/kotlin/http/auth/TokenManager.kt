@@ -23,7 +23,8 @@ class TokenManager(
     private var tokenState: Either<GetTokenError, TokenState> = Either.Left(TokenNotSet)
 
     fun token(): Either<GetTokenError, AccessToken> = either {
-        val state = tokenState.getOrElse { retrieveToken { fetchToken(authCode.bind()) }.bind() }
+        val authCode = authCode.bind()
+        val state = tokenState.getOrElse { retrieveToken { fetchToken(authCode) }.bind() }
 
         val refreshedState = if (state.expiration <= clock.now()) {
             retrieveToken { refreshToken(state.token) }.bind()
