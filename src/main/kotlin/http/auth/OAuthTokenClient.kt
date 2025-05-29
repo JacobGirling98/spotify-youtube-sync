@@ -1,7 +1,6 @@
 package org.example.http.auth
 
 import arrow.core.Either
-import arrow.core.raise.either
 import org.http4k.core.*
 import org.http4k.filter.ClientFilters.CustomBasicAuth.withBasicAuth
 import org.http4k.lens.*
@@ -20,7 +19,6 @@ fun getToken(
     clientSecret: String,
     httpClient: HttpHandler
 ): Either<GetTokenError, Token> {
-    val grantTypeField = FormField.string().required("grant_type")
     val codeField = FormField.string().required("code")
     val redirectUriField = FormField.string().required("redirect_uri")
     val strictFormBody = Body.webForm(Validator.Strict, grantTypeField, codeField, redirectUriField).toLens()
@@ -40,7 +38,7 @@ fun getToken(
 
     if (!response.status.successful) return Either.Left(HttpError(response.status.code, response.bodyString()))
 
-    return Either.catch { authResponseLens(response) }
+    return Either.catch { authCodeResponseLens(response) }
         .mapLeft { JsonError(it.message) }
         .map {
             Token(
@@ -49,11 +47,43 @@ fun getToken(
                 ExpiresIn(it.expires_in)
             )
         }
-
 }
 
-// fetch token request with initial code
-// fetch token request with refresh token
+fun refreshToken(
+    refreshToken: RefreshToken,
+    endpoint: String,
+    clientId: String,
+    clientSecret: String,
+    httpClient: HttpHandler
+): Either<GetTokenError, Token> {
+    val refreshTokenField = FormField.string().required("refresh_token")
+    val strictFormBody = Body.webForm(Validator.Strict, grantTypeField, refreshTokenField).toLens()
+
+    val webForm = WebForm().with(
+        grantTypeField of "refresh_token",
+        refreshTokenField of refreshToken.value
+    )
+
+    val request = Request(Method.POST, endpoint)
+        .with(strictFormBody of webForm)
+        .withBasicAuth(Credentials(clientId, clientSecret))
+        .contentType(ContentType.APPLICATION_FORM_URLENCODED)
+
+    val response = httpClient(request)
+
+    if (!response.status.successful) return Either.Left(HttpError(response.status.code, response.bodyString()))
+
+    return Either.catch { refreshTokenResponseLens(response) }
+        .mapLeft { JsonError(it.message) }
+        .map {
+            Token(
+                AccessToken(it.access_token),
+                refreshToken,
+                ExpiresIn(it.expires_in)
+            )
+        }
+}
+
 // Token manager stores state, calls refresh periodically, and returns the value of the access token
 
 // sealed Hierarchy of reasons token might be missing, instead of null

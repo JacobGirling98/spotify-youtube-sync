@@ -17,6 +17,7 @@ object CustomJackson : ConfigurableJackson(
         .done()
         .deactivateDefaultTyping()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true)
 )
 
 inline fun <reified T : Any> bodyLens(): BiDiBodyLens<T> = Body.auto<T>().toLens()

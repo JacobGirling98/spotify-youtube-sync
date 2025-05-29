@@ -4,8 +4,8 @@ import arrow.core.getOrElse
 import org.example.config.loadEnvironmentVariables
 import org.example.http.auth.SpotifyAuth
 import org.example.http.auth.YouTubeAuth
-import org.example.http.server.routes
 import org.example.http.server.redirectHandler
+import org.example.http.server.routes
 import org.http4k.server.Undertow
 import org.http4k.server.asServer
 

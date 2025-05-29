@@ -13,6 +13,6 @@ fun routes(
     spotifyRedirectHandler: HttpHandler,
     youtubeRedirectHandler: HttpHandler
 ): HttpHandler = routes(
-    spotifyConfig.internalRedirectUri bind GET to spotifyRedirectHandler,
-    youtubeConfig.internalRedirectUri bind GET to youtubeRedirectHandler
+    spotifyConfig.internalRedirectRoute bind GET to spotifyRedirectHandler,
+    youtubeConfig.internalRedirectRoute bind GET to youtubeRedirectHandler
 )
