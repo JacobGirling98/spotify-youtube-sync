@@ -11,8 +11,8 @@ import kotlin.time.Instant
 @ExperimentalTime
 class TokenManager(
     private val fetchToken: (AuthCode) -> TokenResult,
-    private val refreshToken: (Token) -> TokenResult,
-    private val clock: Clock
+    private val refreshToken: (RefreshToken) -> TokenResult,
+    private val clock: Clock = Clock.System
 ) {
     private data class TokenState(
         val token: Token,
@@ -27,7 +27,7 @@ class TokenManager(
         val state = tokenState.getOrElse { retrieveToken { fetchToken(authCode) }.bind() }
 
         val refreshedState = if (state.expiration <= clock.now()) {
-            retrieveToken { refreshToken(state.token) }.bind()
+            retrieveToken { refreshToken(state.token.refreshToken) }.bind()
         } else {
             state
         }

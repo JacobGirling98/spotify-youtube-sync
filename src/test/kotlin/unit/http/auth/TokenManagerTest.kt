@@ -24,7 +24,7 @@ class TokenManagerTest {
         ExpiresIn(expiresInSeconds)
     )
     private val fetchToken: (AuthCode) -> TokenResult = { Either.Right(aToken) }
-    private val refreshToken: (Token) -> TokenResult = {
+    private val refreshToken: (RefreshToken) -> TokenResult = {
         Either.Right(
             Token(
                 aRefreshedAccessToken,
@@ -111,7 +111,7 @@ class TokenManagerTest {
     private fun tokenManagerWithAuthCode(
         authCode: AuthCode,
         fetchToken: (AuthCode) -> TokenResult,
-        refreshToken: (Token) -> TokenResult,
+        refreshToken: (RefreshToken) -> TokenResult,
         clock: Clock
     ): TokenManager {
         val tokenManager = TokenManager(fetchToken, refreshToken, clock)
