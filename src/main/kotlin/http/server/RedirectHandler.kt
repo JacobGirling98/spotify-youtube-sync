@@ -6,11 +6,14 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.queries
 
-// TODO - make more robust
-// TODO - add a body to let me know it worked correctly
+
 fun redirectHandler(onRequest: (AuthCode) -> Unit): HttpHandler = { request ->
     val query = request.uri.queries()
-    val code = query.firstOrNull { (first, _) -> first.lowercase() == "code" }?.second ?: "not a code!"
-    onRequest(AuthCode(code))
-    Response(Status.OK)
+    val code = query.firstOrNull { (first, _) -> first.lowercase() == "code" }?.second
+    if (code == null) {
+        Response(Status.BAD_REQUEST).body("Code was not found in request header")
+    } else {
+        onRequest(AuthCode(code))
+        Response(Status.OK)
+    }
 }
