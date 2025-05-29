@@ -1,0 +1,70 @@
+package unit.http.auth
+
+import arrow.core.Either
+import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.matchers.shouldBe
+import org.example.http.auth.*
+import util.TestClock
+import kotlin.test.Test
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
+
+@ExperimentalTime
+class TokenManagerTest {
+
+    private val authCode = AuthCode("abc")
+    private val anAccessToken = AccessToken("123")
+    private val aRefreshedAccessToken = AccessToken("321")
+    private val expiresInSeconds = 50
+    private val fetchToken: (AuthCode) -> Either<GetTokenError, Token> = {
+        Either.Right(
+            Token(
+                anAccessToken,
+                RefreshToken("456"),
+                ExpiresIn(expiresInSeconds)
+            )
+        )
+    }
+    private val refreshToken: (Token) -> Either<GetTokenError, Token> = {
+        Either.Right(
+            Token(
+                aRefreshedAccessToken,
+                RefreshToken("456"),
+                ExpiresIn(expiresInSeconds)
+            )
+        )
+    }
+
+    @Test
+    fun `calls fetchToken if the value of the token is null`() {
+        val clock = TestClock()
+        val manager = TokenManager(authCode, fetchToken, refreshToken, clock)
+
+        manager.token() shouldBeRight anAccessToken
+    }
+
+    @Test
+    fun `refreshes the token if it has expired`() {
+        val clock = TestClock()
+        val manager = TokenManager(authCode, fetchToken, refreshToken, clock)
+
+        manager.token() shouldBeRight anAccessToken
+
+        clock.advanceTime(60.seconds)
+
+        manager.token() shouldBeRight aRefreshedAccessToken
+    }
+
+    @Test
+    fun `doesn't refresh if token has not expired`() {
+        val clock = TestClock()
+        val manager = TokenManager(authCode, fetchToken, refreshToken, clock)
+
+        manager.token() shouldBeRight anAccessToken
+
+        clock.advanceTime(30.seconds)
+
+        manager.token() shouldBeRight anAccessToken
+    }
+}
+

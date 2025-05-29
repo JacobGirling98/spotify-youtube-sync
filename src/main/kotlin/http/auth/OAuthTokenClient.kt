@@ -4,12 +4,11 @@ import arrow.core.Either
 import org.http4k.core.*
 import org.http4k.filter.ClientFilters.CustomBasicAuth.withBasicAuth
 import org.http4k.lens.*
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 sealed class GetTokenError(open val message: String?)
 data class HttpError(val statusCode: Int, override val message: String) : GetTokenError(message)
 data class JsonError(override val message: String?) : GetTokenError(message)
+data object TokenNotSet : GetTokenError("Token has not been set")
 
 fun getToken(
     authCode: AuthCode,
@@ -84,19 +83,4 @@ fun refreshToken(
         }
 }
 
-// Token manager stores state, calls refresh periodically, and returns the value of the access token
 
-// sealed Hierarchy of reasons token might be missing, instead of null
-
-class TokenManager @OptIn(ExperimentalTime::class) constructor(
-    private val initialAccessCode: String,
-    private val fetchToken: (String) -> Token,
-    private val refreshToken: (Token) -> Token,
-    private val clock: Clock
-) {
-    private var currentToken: Token? = null
-    private var tokenExpiration: Long = 0
-
-    val token: AccessToken?
-        get() = currentToken?.accessToken
-}
