@@ -3,6 +3,7 @@ package unit.http.auth
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.matchers.shouldBe
 import org.example.http.auth.*
 import util.TestClock
 import kotlin.test.Test
@@ -16,16 +17,13 @@ class TokenManagerTest {
     private val anAccessToken = AccessToken("123")
     private val aRefreshedAccessToken = AccessToken("321")
     private val expiresInSeconds = 50
-    private val fetchToken: (AuthCode) -> Either<GetTokenError, Token> = {
-        Either.Right(
-            Token(
-                anAccessToken,
-                RefreshToken("456"),
-                ExpiresIn(expiresInSeconds)
-            )
-        )
-    }
-    private val refreshToken: (Token) -> Either<GetTokenError, Token> = {
+    private val aToken = Token(
+        anAccessToken,
+        RefreshToken("456"),
+        ExpiresIn(expiresInSeconds)
+    )
+    private val fetchToken: (AuthCode) -> TokenResult = { Either.Right(aToken) }
+    private val refreshToken: (Token) -> TokenResult = {
         Either.Right(
             Token(
                 aRefreshedAccessToken,
@@ -86,6 +84,20 @@ class TokenManagerTest {
         clock.advanceTime(60.seconds)
 
         manager.token() shouldBeLeft error
+    }
+
+    @Test
+    fun `can update the initial authCode`() {
+        val fetchToken: (AuthCode) -> TokenResult = {
+            it shouldBe AuthCode("def")
+            Either.Right(aToken)
+        }
+
+        val manager = TokenManager(authCode, fetchToken, refreshToken, TestClock())
+
+        manager.updateAuthCode(AuthCode("def"))
+
+        manager.token() shouldBeRight anAccessToken
     }
 }
 

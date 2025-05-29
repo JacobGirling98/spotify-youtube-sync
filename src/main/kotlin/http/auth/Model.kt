@@ -32,3 +32,4 @@ value class RefreshToken(val value: String)
 value class ExpiresIn(val value: Int)
 
 data class Token(val accessToken: AccessToken, val refreshToken: RefreshToken, val expiresIn: ExpiresIn)
+

@@ -17,7 +17,7 @@ fun getToken(
     clientId: String,
     clientSecret: String,
     httpClient: HttpHandler
-): Either<GetTokenError, Token> {
+): TokenResult {
     val codeField = FormField.string().required("code")
     val redirectUriField = FormField.string().required("redirect_uri")
     val strictFormBody = Body.webForm(Validator.Strict, grantTypeField, codeField, redirectUriField).toLens()
@@ -54,7 +54,7 @@ fun refreshToken(
     clientId: String,
     clientSecret: String,
     httpClient: HttpHandler
-): Either<GetTokenError, Token> {
+): TokenResult {
     val refreshTokenField = FormField.string().required("refresh_token")
     val strictFormBody = Body.webForm(Validator.Strict, grantTypeField, refreshTokenField).toLens()
 
