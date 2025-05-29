@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import org.example.http.auth.*
 import util.TestClock
 import kotlin.test.Test
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 
@@ -36,7 +37,7 @@ class TokenManagerTest {
     @Test
     fun `calls fetchToken if the value of the token is null`() {
         val clock = TestClock()
-        val manager = TokenManager(authCode, fetchToken, refreshToken, clock)
+        val manager = tokenManagerWithAuthCode(authCode, fetchToken, refreshToken, clock)
 
         manager.token() shouldBeRight anAccessToken
     }
@@ -44,7 +45,7 @@ class TokenManagerTest {
     @Test
     fun `refreshes the token if it has expired`() {
         val clock = TestClock()
-        val manager = TokenManager(authCode, fetchToken, refreshToken, clock)
+        val manager = tokenManagerWithAuthCode(authCode, fetchToken, refreshToken, clock)
 
         manager.token() shouldBeRight anAccessToken
 
@@ -56,7 +57,7 @@ class TokenManagerTest {
     @Test
     fun `doesn't refresh if token has not expired`() {
         val clock = TestClock()
-        val manager = TokenManager(authCode, fetchToken, refreshToken, clock)
+        val manager = tokenManagerWithAuthCode(authCode, fetchToken, refreshToken, clock)
 
         manager.token() shouldBeRight anAccessToken
 
@@ -68,7 +69,7 @@ class TokenManagerTest {
     @Test
     fun `if fetch token returns an error then that is propagated out`() {
         val error = HttpError(400, "Oh dear")
-        val manager = TokenManager(authCode, { Either.Left(error) }, refreshToken, TestClock())
+        val manager = tokenManagerWithAuthCode(authCode, { Either.Left(error) }, refreshToken, TestClock())
 
         manager.token() shouldBeLeft error
     }
@@ -77,7 +78,7 @@ class TokenManagerTest {
     fun `if refresh token returns an error then that is propagated out`() {
         val error = JsonError("Oh dear")
         val clock = TestClock()
-        val manager = TokenManager(authCode, fetchToken, { Either.Left(error) }, clock)
+        val manager = tokenManagerWithAuthCode(authCode, fetchToken, { Either.Left(error) }, clock)
 
         manager.token() shouldBeRight anAccessToken
 
@@ -87,17 +88,35 @@ class TokenManagerTest {
     }
 
     @Test
-    fun `can update the initial authCode`() {
+    fun `auth token is required`() {
+        val manager = TokenManager(fetchToken, refreshToken, TestClock())
+
+        manager.token() shouldBeLeft AuthCodeNotSet
+    }
+
+    @Test
+    fun `can update the authCode`() {
         val fetchToken: (AuthCode) -> TokenResult = {
-            it shouldBe AuthCode("def")
+            it shouldBe AuthCode("abc")
             Either.Right(aToken)
         }
 
-        val manager = TokenManager(authCode, fetchToken, refreshToken, TestClock())
+        val manager = tokenManagerWithAuthCode(authCode, fetchToken, refreshToken, TestClock())
 
-        manager.updateAuthCode(AuthCode("def"))
+        manager.updateAuthCode(AuthCode("abc"))
 
         manager.token() shouldBeRight anAccessToken
+    }
+
+    private fun tokenManagerWithAuthCode(
+        authCode: AuthCode,
+        fetchToken: (AuthCode) -> TokenResult,
+        refreshToken: (Token) -> TokenResult,
+        clock: Clock
+    ): TokenManager {
+        val tokenManager = TokenManager(fetchToken, refreshToken, clock)
+        tokenManager.updateAuthCode(authCode)
+        return tokenManager
     }
 }
 

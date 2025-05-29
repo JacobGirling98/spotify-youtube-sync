@@ -10,7 +10,6 @@ import kotlin.time.Instant
 
 @ExperimentalTime
 class TokenManager(
-    private var authCode: AuthCode,
     private val fetchToken: (AuthCode) -> TokenResult,
     private val refreshToken: (Token) -> TokenResult,
     private val clock: Clock
@@ -20,10 +19,11 @@ class TokenManager(
         val expiration: Instant
     )
 
+    private var authCode: Either<AuthCodeNotSet, AuthCode> = Either.Left(AuthCodeNotSet)
     private var tokenState: Either<GetTokenError, TokenState> = Either.Left(TokenNotSet)
 
     fun token(): Either<GetTokenError, AccessToken> = either {
-        val state = tokenState.getOrElse { retrieveToken { fetchToken(authCode) }.bind() }
+        val state = tokenState.getOrElse { retrieveToken { fetchToken(authCode.bind()) }.bind() }
 
         val refreshedState = if (state.expiration <= clock.now()) {
             retrieveToken { refreshToken(state.token) }.bind()
@@ -36,7 +36,7 @@ class TokenManager(
     }
 
     fun updateAuthCode(authCode: AuthCode) {
-        this.authCode = authCode
+        this.authCode = Either.Right(authCode)
     }
 
     private inline fun retrieveToken(fn: () -> TokenResult) = either {

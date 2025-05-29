@@ -9,6 +9,7 @@ sealed class GetTokenError(open val message: String?)
 data class HttpError(val statusCode: Int, override val message: String) : GetTokenError(message)
 data class JsonError(override val message: String?) : GetTokenError(message)
 data object TokenNotSet : GetTokenError("Token has not been set")
+data object AuthCodeNotSet : GetTokenError("Auth code has not been set")
 
 fun getToken(
     authCode: AuthCode,
