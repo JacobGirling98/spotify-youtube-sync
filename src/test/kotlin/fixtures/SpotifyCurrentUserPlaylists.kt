@@ -1,5 +1,7 @@
 package fixtures
 
+import util.jsonify
+
 fun spotifyCurrentUserPlaylists(id: String, name: String, next: String? = null) = """{
   "href": "https://api.spotify.com/v1/me/shows?offset=0&limit=20",
   "limit": 20,
@@ -45,5 +47,3 @@ fun spotifyCurrentUserPlaylists(id: String, name: String, next: String? = null) 
     }
   ]
 }""".trimIndent()
-
-private fun String?.jsonify() = this?.let { "\"$it\"" } ?: "null"
