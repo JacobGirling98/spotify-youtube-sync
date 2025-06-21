@@ -19,17 +19,13 @@ data class RefreshTokenResponse(
 val authCodeResponseLens = bodyLens<AuthCodeResponse>()
 val refreshTokenResponseLens = bodyLens<RefreshTokenResponse>()
 
-@JvmInline
-value class AuthCode(val value: String)
+@JvmInline value class AuthCode(val value: String)
 
-@JvmInline
-value class AccessToken(val value: String)
+@JvmInline value class AccessToken(val value: String)
 
-@JvmInline
-value class RefreshToken(val value: String)
+@JvmInline value class RefreshToken(val value: String)
 
-@JvmInline
-value class ExpiresIn(val value: Int)
+@JvmInline value class ExpiresIn(val value: Int)
 
 data class Token(val accessToken: AccessToken, val refreshToken: RefreshToken, val expiresIn: ExpiresIn)
 

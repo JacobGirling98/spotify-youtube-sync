@@ -68,7 +68,7 @@ class TokenManagerTest {
 
     @Test
     fun `if fetch token returns an error then that is propagated out`() {
-        val error = HttpError(400, "Oh dear")
+        val error = HttpResponseError(400, "Oh dear")
         val manager = tokenManagerWithAuthCode(authCode, { Either.Left(error) }, refreshToken, TestClock())
 
         manager.token() shouldBeLeft error
@@ -89,7 +89,7 @@ class TokenManagerTest {
 
     @Test
     fun `auth token is required`() {
-        val manager = TokenManager(fetchToken, refreshToken, TestClock())
+        val manager = OAuthTokenManager(fetchToken, refreshToken, TestClock())
 
         manager.token() shouldBeLeft AuthCodeNotSet
     }
@@ -113,8 +113,8 @@ class TokenManagerTest {
         fetchToken: (AuthCode) -> TokenResult,
         refreshToken: (RefreshToken) -> TokenResult,
         clock: Clock
-    ): TokenManager {
-        val tokenManager = TokenManager(fetchToken, refreshToken, clock)
+    ): OAuthTokenManager {
+        val tokenManager = OAuthTokenManager(fetchToken, refreshToken, clock)
         tokenManager.updateAuthCode(authCode)
         return tokenManager
     }

@@ -1,12 +1,20 @@
 package org.example.http.auth
 
 import arrow.core.Either
+import org.example.http.util.httpResponseError
+import org.example.util.catchJsonError
 import org.http4k.core.*
 import org.http4k.filter.ClientFilters.CustomBasicAuth.withBasicAuth
 import org.http4k.lens.*
 
-sealed class GetTokenError(open val message: String?)
-data class HttpError(val statusCode: Int, override val message: String) : GetTokenError(message)
+sealed class HttpError(open val message: String?)
+sealed class GetTokenError(override val message: String?) : HttpError(message)
+data class HttpResponseError(val statusCode: Int, override val message: String) : HttpError(message) {
+    companion object {
+        fun from(response: Response) = HttpResponseError(response.status.code, response.bodyString())
+    }
+}
+
 data class JsonError(override val message: String?) : GetTokenError(message)
 data object TokenNotSet : GetTokenError("Token has not been set")
 data object AuthCodeNotSet : GetTokenError("Auth code has not been set")
@@ -36,10 +44,9 @@ fun getToken(
 
     val response = httpClient(request)
 
-    if (!response.status.successful) return Either.Left(HttpError(response.status.code, response.bodyString()))
+    if (!response.status.successful) return httpResponseError(response)
 
-    return Either.catch { authCodeResponseLens(response) }
-        .mapLeft { JsonError(it.message) }
+    return catchJsonError { authCodeResponseLens(response) }
         .map {
             Token(
                 AccessToken(it.access_token),
@@ -71,10 +78,9 @@ fun refreshToken(
 
     val response = httpClient(request)
 
-    if (!response.status.successful) return Either.Left(HttpError(response.status.code, response.bodyString()))
+    if (!response.status.successful) return Either.Left(HttpResponseError(response.status.code, response.bodyString()))
 
-    return Either.catch { refreshTokenResponseLens(response) }
-        .mapLeft { JsonError(it.message) }
+    return catchJsonError { refreshTokenResponseLens(response) }
         .map {
             Token(
                 AccessToken(it.access_token),

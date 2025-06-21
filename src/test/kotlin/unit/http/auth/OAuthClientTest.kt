@@ -97,7 +97,7 @@ class OAuthClientTest {
 
         val response = getToken(AuthCode(authCode), endpoint, redirect, clientId, clientSecret, client)
 
-        response.leftOrNull() shouldBe HttpError(400, "An error")
+        response.leftOrNull() shouldBe HttpResponseError(400, "An error")
     }
 
     @Test
@@ -156,6 +156,6 @@ class OAuthClientTest {
 
         val response = refreshToken(RefreshToken(refreshToken), endpoint, clientId, clientSecret, client)
 
-        response.leftOrNull() shouldBe HttpError(400, "An error")
+        response.leftOrNull() shouldBe HttpResponseError(400, "An error")
     }
 }

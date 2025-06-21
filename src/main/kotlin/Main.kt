@@ -2,18 +2,15 @@ package org.example
 
 import arrow.core.getOrElse
 import org.example.config.loadEnvironmentVariables
-import org.example.http.auth.AuthCode
-import org.example.http.auth.RefreshToken
-import org.example.http.auth.SpotifyAuth
-import org.example.http.auth.TokenManager
-import org.example.http.auth.YouTubeAuth
-import org.example.http.auth.getToken
-import org.example.http.auth.refreshToken
+import org.example.http.auth.*
 import org.example.http.server.redirectHandler
 import org.example.http.server.routes
+import org.example.http.spotify.client.SpotifyRestClient
+import org.example.http.util.retry
 import org.http4k.client.ApacheClient
 import org.http4k.server.Undertow
 import org.http4k.server.asServer
+import java.time.Duration
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -60,11 +57,8 @@ fun main() {
         client
     )
 
-    val spotifyTokenManager = TokenManager(::spotifyFetchToken, ::spotifyRefreshToken)
-    val youTubeTokenManager = TokenManager(::youtubeFetchToken, ::youtubeRefreshToken)
-
-    println(spotifyConfig.codeUri(environment.spotifyClientId))
-    println(youtubeConfig.codeUri(environment.youtubeClientId))
+    val spotifyTokenManager = OAuthTokenManager(::spotifyFetchToken, ::spotifyRefreshToken)
+    val youTubeTokenManager = OAuthTokenManager(::youtubeFetchToken, ::youtubeRefreshToken)
 
     val app = routes(
         spotifyConfig,
@@ -73,12 +67,12 @@ fun main() {
         redirectHandler { youTubeTokenManager.updateAuthCode(it) }
     ).asServer(Undertow(8000)).start()
 
-    while(true) {
-        if (spotifyTokenManager.token().leftOrNull() == null && youTubeTokenManager.token().leftOrNull() == null) {
-            break
-        }
-    }
+    val spotifyClient = SpotifyRestClient(retry(client), spotifyTokenManager, "https://api.spotify.com/v1")
 
-    println(spotifyTokenManager.token())
-    println(youTubeTokenManager.token())
+    println(spotifyConfig.codeUri(environment.spotifyClientId))
+
+    while (true) {
+        Thread.sleep(Duration.ofSeconds(20))
+        println(spotifyClient.playlists())
+    }
 }
