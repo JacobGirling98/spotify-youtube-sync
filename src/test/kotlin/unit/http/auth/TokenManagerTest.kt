@@ -4,6 +4,9 @@ import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
+import org.example.domain.error.AuthCodeNotSet
+import org.example.domain.error.HttpResponseError
+import org.example.domain.error.JsonError
 import org.example.http.auth.*
 import util.TestClock
 import kotlin.test.Test

@@ -3,6 +3,10 @@ package org.example.http.auth
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
+import org.example.domain.error.AuthCodeNotSet
+import org.example.domain.error.GetTokenError
+import org.example.domain.error.HttpError
+import org.example.domain.error.TokenNotSet
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime

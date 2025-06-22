@@ -5,10 +5,10 @@ package org.example.http.spotify.client
 import arrow.core.Either
 import arrow.core.raise.either
 import org.example.config.bodyLens
+import org.example.domain.error.HttpError
+import org.example.domain.error.HttpResponseError
 import org.example.domain.model.*
 import org.example.domain.music.MusicService
-import org.example.http.auth.HttpError
-import org.example.http.auth.HttpResponseError
 import org.example.http.auth.TokenManager
 import org.example.http.spotify.model.Page
 import org.example.http.spotify.model.Playlist

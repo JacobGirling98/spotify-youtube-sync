@@ -1,24 +1,12 @@
 package org.example.http.auth
 
 import arrow.core.Either
+import org.example.domain.error.HttpResponseError
 import org.example.http.util.httpResponseError
 import org.example.util.catchJsonError
 import org.http4k.core.*
 import org.http4k.filter.ClientFilters.CustomBasicAuth.withBasicAuth
 import org.http4k.lens.*
-
-sealed class Error(open val message: String?)
-sealed class HttpError(override val message: String?) : Error(message)
-sealed class GetTokenError(override val message: String?) : HttpError(message)
-data class HttpResponseError(val statusCode: Int, override val message: String) : HttpError(message) {
-    companion object {
-        fun from(response: Response) = HttpResponseError(response.status.code, response.bodyString())
-    }
-}
-
-data class JsonError(override val message: String?) : GetTokenError(message)
-data object TokenNotSet : GetTokenError("Token has not been set")
-data object AuthCodeNotSet : GetTokenError("Auth code has not been set")
 
 fun getToken(
     authCode: AuthCode,

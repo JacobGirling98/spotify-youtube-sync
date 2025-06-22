@@ -10,10 +10,10 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldInclude
 import io.kotest.matchers.types.shouldBeInstanceOf
+import org.example.domain.error.HttpResponseError
+import org.example.domain.error.JsonError
 import org.example.domain.model.*
 import org.example.domain.model.Service.SPOTIFY
-import org.example.http.auth.HttpResponseError
-import org.example.http.auth.JsonError
 import org.example.http.spotify.client.SpotifyRestClient
 import org.example.http.spotify.model.Playlist
 import org.http4k.core.HttpHandler

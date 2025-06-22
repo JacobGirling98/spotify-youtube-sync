@@ -1,7 +1,11 @@
 package fixtures
 
 import arrow.core.Either
-import org.example.http.auth.*
+import org.example.domain.error.HttpError
+import org.example.domain.error.HttpResponseError
+import org.example.http.auth.AccessToken
+import org.example.http.auth.AuthCode
+import org.example.http.auth.TokenManager
 
 class TestTokenManager(
     private val tokenToReturn: String = "token",

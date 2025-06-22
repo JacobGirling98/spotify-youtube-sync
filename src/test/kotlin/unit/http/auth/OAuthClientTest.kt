@@ -5,6 +5,8 @@ import io.kotest.matchers.be
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import org.example.domain.error.HttpResponseError
+import org.example.domain.error.JsonError
 import org.example.http.auth.*
 import org.http4k.core.*
 import org.http4k.core.Status.Companion.BAD_REQUEST
