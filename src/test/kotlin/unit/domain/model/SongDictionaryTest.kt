@@ -1,18 +1,16 @@
-package unit.domain
+package unit.domain.model
 
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import org.example.domain.model.*
-import org.example.domain.model.Service.SPOTIFY
-import org.example.domain.model.Service.YOUTUBE_MUSIC
 import kotlin.test.Test
 
 class SongDictionaryTest {
 
     private val song = Song(Name("songName"), listOf(Artist("artist")))
     private val id = Id("123")
-    private val serviceIds = ServiceIds(SPOTIFY to id)
-    private val otherServiceIds = ServiceIds(YOUTUBE_MUSIC to id)
+    private val serviceIds = ServiceIds(Service.SPOTIFY to id)
+    private val otherServiceIds = ServiceIds(Service.YOUTUBE_MUSIC to id)
 
     @Test
     fun `can construct via vararg of pairs`() {
@@ -62,8 +60,8 @@ class SongDictionaryTest {
 
         firstDictionary.mergeWith(secondDictionary) shouldBeRight SongDictionary(
             song to ServiceIds(
-                SPOTIFY to id,
-                YOUTUBE_MUSIC to id
+                Service.SPOTIFY to id,
+                Service.YOUTUBE_MUSIC to id
             )
         )
     }

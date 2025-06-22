@@ -15,4 +15,8 @@ data class SongDictionary(
             first.mergeWith(second).bind()
         })
     }
+
+    companion object {
+        fun empty() = SongDictionary()
+    }
 }
