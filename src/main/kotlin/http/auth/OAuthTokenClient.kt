@@ -7,7 +7,8 @@ import org.http4k.core.*
 import org.http4k.filter.ClientFilters.CustomBasicAuth.withBasicAuth
 import org.http4k.lens.*
 
-sealed class HttpError(open val message: String?)
+sealed class Error(open val message: String?)
+sealed class HttpError(override val message: String?) : Error(message)
 sealed class GetTokenError(override val message: String?) : HttpError(message)
 data class HttpResponseError(val statusCode: Int, override val message: String) : HttpError(message) {
     companion object {

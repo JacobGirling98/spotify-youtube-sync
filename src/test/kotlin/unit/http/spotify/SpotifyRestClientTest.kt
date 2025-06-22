@@ -21,6 +21,7 @@ import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import kotlin.test.Test
+import kotlin.test.fail
 import kotlin.time.ExperimentalTime
 
 class SpotifyRestClientTest {
@@ -36,7 +37,7 @@ class SpotifyRestClientTest {
 
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        val playlists = client.playlists()
+        val playlists = client.playlistIds()
 
         playlists shouldBeRight listOf(Playlist(Id("playlist-id"), Name("playlist-name")))
     }
@@ -52,7 +53,7 @@ class SpotifyRestClientTest {
         }
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        val playlists = client.playlists()
+        val playlists = client.playlistIds()
 
         playlists shouldBeRight listOf(
             Playlist(Id("first-id"), Name("first-name")),
@@ -71,7 +72,7 @@ class SpotifyRestClientTest {
         }
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        val playlists = client.playlists()
+        val playlists = client.playlistIds()
 
         playlists.leftOrNull().shouldBeInstanceOf<JsonError>()
     }
@@ -85,7 +86,7 @@ class SpotifyRestClientTest {
 
         val client = SpotifyRestClient(http, TestTokenManager("my-token"), "spotify")
 
-        client.playlists()
+        client.playlistIds()
     }
 
     @Test
@@ -93,7 +94,7 @@ class SpotifyRestClientTest {
         val http: HttpHandler = { Response(OK).body(spotifyCurrentUserPlaylists("playlist-id", "playlist-name")) }
         val client = SpotifyRestClient(http, TestTokenManager(tokenFailure = true), "spotify")
 
-        client.playlists().leftOrNull().shouldBeInstanceOf<HttpResponseError>()
+        client.playlistIds().leftOrNull().shouldBeInstanceOf<HttpResponseError>()
     }
 
     @Test
@@ -101,7 +102,7 @@ class SpotifyRestClientTest {
         val http: HttpHandler = { Response(BAD_REQUEST).body("oh dear") }
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        client.playlists() shouldBeLeft HttpResponseError(400, "oh dear")
+        client.playlistIds() shouldBeLeft HttpResponseError(400, "oh dear")
     }
 
     @Test
@@ -115,7 +116,12 @@ class SpotifyRestClientTest {
 
         val tracks = client.tracks(Id(playlistId))
 
-        tracks shouldBeRight SongDictionary(Song(Name(song), listOf(Artist(artist))) to mapOf(SPOTIFY to Id(songId)))
+        tracks shouldBeRight SongDictionary(
+            Song(
+                Name(song),
+                listOf(Artist(artist))
+            ) to ServiceIds(SPOTIFY to Id(songId))
+        )
     }
 
     @Test
@@ -132,8 +138,8 @@ class SpotifyRestClientTest {
         val tracks = client.tracks(Id(playlistId))
 
         tracks shouldBeRight SongDictionary(
-            Song(Name(song), listOf(Artist(artist))) to mapOf(SPOTIFY to Id(songId)),
-            Song(Name("other-song"), listOf(Artist("other-artist"))) to mapOf(SPOTIFY to Id("other-id"))
+            Song(Name(song), listOf(Artist(artist))) to ServiceIds(SPOTIFY to Id(songId)),
+            Song(Name("other-song"), listOf(Artist("other-artist"))) to ServiceIds(SPOTIFY to Id("other-id"))
         )
     }
 
@@ -179,5 +185,27 @@ class SpotifyRestClientTest {
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
         client.tracks(Id(playlistId)) shouldBeLeft HttpResponseError(400, "oh dear")
+    }
+
+    @Test
+    fun `can get playlists in core domain`() {
+        val http: HttpHandler = { request ->
+            val body = when {
+                request.uri.toString().contains("tracks") -> spotifyPlaylistItems(song, artist, songId)
+                request.uri.toString().contains("me") -> spotifyCurrentUserPlaylists(playlistId, "playlist-name")
+                else -> fail("Unknown URL hit")
+            }
+            Response(OK).body(body)
+        }
+        val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
+
+        val playlists = client.playlists()
+
+        playlists shouldBeRight listOf(
+            Playlist(
+                Name("playlist-name"),
+                SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(SPOTIFY to Id(songId))),
+            )
+        )
     }
 }

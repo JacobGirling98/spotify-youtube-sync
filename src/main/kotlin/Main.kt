@@ -1,5 +1,6 @@
 package org.example
 
+import arrow.core.flatMap
 import arrow.core.getOrElse
 import org.example.config.loadEnvironmentVariables
 import org.example.http.auth.*
@@ -73,6 +74,8 @@ fun main() {
 
     while (true) {
         Thread.sleep(Duration.ofSeconds(20))
-        println(spotifyClient.playlists())
+        val playlists = spotifyClient.playlistIds()
+        val tracks = playlists.flatMap { playlists -> spotifyClient.tracks(playlists.first().id) }
+        println(tracks)
     }
 }

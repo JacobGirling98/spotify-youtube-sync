@@ -1,7 +1,13 @@
 package org.example.domain.model
 
-data class SongDictionary(
-    val entries: Map<Song, Map<Service, Id>>
+data class ServiceIds(
+    val entries: Map<Service, Id>
 ) {
-    constructor(vararg pairs: Pair<Song, Map<Service, Id>>) : this(mapOf(*pairs))
+    constructor(vararg pairs: Pair<Service, Id>) : this(mapOf(*pairs))
+}
+
+data class SongDictionary(
+    val entries: Map<Song, ServiceIds>
+) {
+    constructor(vararg pairs: Pair<Song, ServiceIds>) : this(mapOf(*pairs))
 }
