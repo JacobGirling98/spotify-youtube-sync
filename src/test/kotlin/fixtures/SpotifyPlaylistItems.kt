@@ -109,3 +109,34 @@ fun spotifyPlaylistItems(songName: String, artist: String, id: String, next: Str
   ]
 }
 """.trimIndent()
+
+fun spotifyPlaylistItemsWithoutTrack() = """{
+  "href": "https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks?offset=0&limit=100&locale=en-GB,en-US;q%3D0.9,en;q%3D0.8",
+  "limit": 100,
+  "next": null,
+  "offset": 0,
+  "previous": null,
+  "total": 1,
+  "items": [
+    {
+      "added_at": "2015-01-15T12:39:22Z",
+      "added_by": {
+        "external_urls": {
+          "spotify": "https://open.spotify.com/user/jmperezperez"
+        },
+        "href": "https://api.spotify.com/v1/users/jmperezperez",
+        "id": "jmperezperez",
+        "type": "user",
+        "uri": "spotify:user:jmperezperez"
+      },
+      "is_local": false,
+      "track": null,
+      "primary_color": null,
+      "video_thumbnail": {
+        "url": null
+      }
+    }
+  ]
+}
+    
+""".trimIndent()

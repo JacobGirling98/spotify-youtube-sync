@@ -36,6 +36,6 @@ class ServiceIdsTest {
         val first = ServiceIds(Service.SPOTIFY to Id("123"))
         val second = ServiceIds(Service.SPOTIFY to Id("456"))
 
-        first.mergeWith(second) shouldBeLeft MergeError("Ids do not match for same service when attempted to merge ServiceIds: 123, 456")
+        first.mergeWith(second) shouldBeLeft MergeError("Ids do not match: 123, 456")
     }
 }

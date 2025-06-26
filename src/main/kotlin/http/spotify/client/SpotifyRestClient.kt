@@ -12,6 +12,7 @@ import org.example.domain.music.MusicService
 import org.example.http.auth.TokenManager
 import org.example.http.spotify.model.Page
 import org.example.http.spotify.model.Playlist
+import org.example.http.spotify.model.PlaylistItem
 import org.example.util.catchJsonError
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
@@ -29,7 +30,7 @@ class SpotifyRestClient(
     private val trackLens = bodyLens<Page<PlaylistItem>>()
 
     override fun playlists(): Either<HttpError, List<org.example.domain.model.Playlist>> = either {
-        playlistIds().bind().map { playlist ->
+        spotifyPlaylists().bind().map { playlist ->
             Playlist(
                 playlist.name,
                 tracks(playlist.id).bind()
@@ -37,13 +38,15 @@ class SpotifyRestClient(
         }
     }
 
-    fun playlistIds(): Either<HttpError, List<Playlist>> = recursivePagination("$baseUrl/me/playlists", playlistLens)
+    fun spotifyPlaylists(): Either<HttpError, List<Playlist>> =
+        recursivePagination("$baseUrl/me/playlists", playlistLens)
 
     fun tracks(playlistId: Id): Either<HttpError, SongDictionary> = either {
-        val tracks = recursivePagination("$baseUrl/playlists/${playlistId.value}/tracks", trackLens).bind()
-        SongDictionary(tracks.associate {
-            Song(it.track.name, it.track.artists.map { artist -> Artist(artist.name.value) }) to ServiceIds(
-                Service.SPOTIFY to it.track.id
+        val playlistItems = recursivePagination("$baseUrl/playlists/${playlistId.value}/tracks", trackLens).bind()
+        val tracks = playlistItems.mapNotNull { it.track }
+        SongDictionary(tracks.associate { track ->
+            Song(track.name, track.artists.map { artist -> Artist(artist.name.value) }) to ServiceIds(
+                Service.SPOTIFY to track.id
             )
         })
     }

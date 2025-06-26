@@ -3,6 +3,7 @@ package org.example
 import arrow.core.flatMap
 import arrow.core.getOrElse
 import org.example.config.loadEnvironmentVariables
+import org.example.domain.music.createDictionary
 import org.example.http.auth.*
 import org.example.http.server.redirectHandler
 import org.example.http.server.routes
@@ -74,8 +75,9 @@ fun main() {
 
     while (true) {
         Thread.sleep(Duration.ofSeconds(20))
-        val playlists = spotifyClient.playlistIds()
-        val tracks = playlists.flatMap { playlists -> spotifyClient.tracks(playlists.first().id) }
-        println(tracks)
+        val songs = spotifyClient.playlists().flatMap { playlists ->
+            createDictionary(playlists)
+        }
+        println(songs)
     }
 }

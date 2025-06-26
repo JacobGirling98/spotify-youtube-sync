@@ -15,7 +15,7 @@ data class ServiceIds(
         ServiceIds(
             entries.combine(other.entries) { first, second ->
                 if (first != second)
-                    raise(MergeError("Ids do not match for same service when attempted to merge ServiceIds: ${first.value}, ${second.value}"))
+                    raise(MergeError("Ids do not match: ${first.value}, ${second.value}"))
                 first
             }
         )

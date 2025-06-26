@@ -5,6 +5,7 @@ package unit.http.spotify
 import fixtures.TestTokenManager
 import fixtures.spotifyCurrentUserPlaylists
 import fixtures.spotifyPlaylistItems
+import fixtures.spotifyPlaylistItemsWithoutTrack
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
@@ -37,7 +38,7 @@ class SpotifyRestClientTest {
 
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        val playlists = client.playlistIds()
+        val playlists = client.spotifyPlaylists()
 
         playlists shouldBeRight listOf(Playlist(Id("playlist-id"), Name("playlist-name")))
     }
@@ -53,7 +54,7 @@ class SpotifyRestClientTest {
         }
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        val playlists = client.playlistIds()
+        val playlists = client.spotifyPlaylists()
 
         playlists shouldBeRight listOf(
             Playlist(Id("first-id"), Name("first-name")),
@@ -72,7 +73,7 @@ class SpotifyRestClientTest {
         }
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        val playlists = client.playlistIds()
+        val playlists = client.spotifyPlaylists()
 
         playlists.leftOrNull().shouldBeInstanceOf<JsonError>()
     }
@@ -86,7 +87,7 @@ class SpotifyRestClientTest {
 
         val client = SpotifyRestClient(http, TestTokenManager("my-token"), "spotify")
 
-        client.playlistIds()
+        client.spotifyPlaylists()
     }
 
     @Test
@@ -94,7 +95,7 @@ class SpotifyRestClientTest {
         val http: HttpHandler = { Response(OK).body(spotifyCurrentUserPlaylists("playlist-id", "playlist-name")) }
         val client = SpotifyRestClient(http, TestTokenManager(tokenFailure = true), "spotify")
 
-        client.playlistIds().leftOrNull().shouldBeInstanceOf<HttpResponseError>()
+        client.spotifyPlaylists().leftOrNull().shouldBeInstanceOf<HttpResponseError>()
     }
 
     @Test
@@ -102,7 +103,7 @@ class SpotifyRestClientTest {
         val http: HttpHandler = { Response(BAD_REQUEST).body("oh dear") }
         val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
 
-        client.playlistIds() shouldBeLeft HttpResponseError(400, "oh dear")
+        client.spotifyPlaylists() shouldBeLeft HttpResponseError(400, "oh dear")
     }
 
     @Test
@@ -207,5 +208,15 @@ class SpotifyRestClientTest {
                 SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(SPOTIFY to Id(songId))),
             )
         )
+    }
+
+    @Test
+    fun `empty song dictionary returned if track is null`() {
+        val http: HttpHandler = { Response(OK).body(spotifyPlaylistItemsWithoutTrack()) }
+        val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
+
+        val songs = client.tracks(Id(playlistId))
+
+        songs shouldBeRight SongDictionary.empty()
     }
 }
