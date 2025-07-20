@@ -12,12 +12,6 @@ data class ServiceIds(
     constructor(vararg pairs: Pair<Service, Id>) : this(mapOf(*pairs))
 
     fun mergeWith(other: ServiceIds): Either<MergeError, ServiceIds> = either {
-        ServiceIds(
-            entries.combine(other.entries) { first, second ->
-                if (first != second)
-                    raise(MergeError("Ids do not match: ${first.value}, ${second.value}"))
-                first
-            }
-        )
+        ServiceIds(entries.combine(other.entries) { first, second -> first })
     }
 }

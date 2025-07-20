@@ -2,8 +2,6 @@ package unit.domain.music
 
 import fixtures.*
 import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.matchers.types.shouldBeInstanceOf
-import org.example.domain.error.MergeError
 import org.example.domain.model.Id
 import org.example.domain.model.Service.SPOTIFY
 import org.example.domain.model.Service.YOUTUBE_MUSIC
@@ -45,17 +43,5 @@ class DictionaryTest {
             song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
             otherSong to otherServiceId
         )
-    }
-
-    @Test
-    fun `merge error is propagated`() {
-        val playlists = listOf(
-            playlist("My playlist", songDictionary(song, spotifyServiceId)),
-            playlist("My second playlist", songDictionary(song, ServiceIds(SPOTIFY to youtubeId))),
-        )
-
-        val dictionary = createDictionary(playlists)
-
-        dictionary.leftOrNull().shouldBeInstanceOf<MergeError>()
     }
 }

@@ -1,9 +1,7 @@
 package unit.domain.model
 
-import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
-import org.example.domain.error.MergeError
 import org.example.domain.model.*
 import kotlin.test.Test
 
@@ -66,13 +64,5 @@ class SongDictionaryTest {
                 Service.YOUTUBE_MUSIC to id
             )
         )
-    }
-
-    @Test
-    fun `song name is reported if there was an error merging`() {
-        val firstDictionary = SongDictionary(song to serviceIds)
-        val secondDictionary = SongDictionary(song to ServiceIds(Service.SPOTIFY to Id("456")))
-
-        firstDictionary.mergeWith(secondDictionary) shouldBeLeft MergeError("Error when combining songName: Ids do not match: 123, 456")
     }
 }
