@@ -1,14 +1,13 @@
 package org.example
 
-import arrow.core.flatMap
 import arrow.core.getOrElse
 import org.example.config.loadEnvironmentVariables
-import org.example.domain.music.createDictionary
 import org.example.http.auth.*
 import org.example.http.server.redirectHandler
 import org.example.http.server.routes
 import org.example.http.spotify.client.SpotifyRestClient
 import org.example.http.util.retry
+import org.example.http.youtube.client.YouTubeRestClient
 import org.http4k.client.ApacheClient
 import org.http4k.server.Undertow
 import org.http4k.server.asServer
@@ -70,14 +69,13 @@ fun main() {
     ).asServer(Undertow(8000)).start()
 
     val spotifyClient = SpotifyRestClient(retry(client), spotifyTokenManager, "https://api.spotify.com/v1")
+    val youTubeRestClient =
+        YouTubeRestClient(retry(client), youTubeTokenManager, "https://www.googleapis.com/youtube/v3")
 
-    println(spotifyConfig.codeUri(environment.spotifyClientId))
+    println(youtubeConfig.codeUri(environment.youtubeClientId))
 
     while (true) {
         Thread.sleep(Duration.ofSeconds(20))
-        val songs = spotifyClient.playlists().flatMap { playlists ->
-            createDictionary(playlists)
-        }
-        println(songs)
+        println(youTubeRestClient.youtubePlaylists())
     }
 }
