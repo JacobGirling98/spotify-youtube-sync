@@ -2,6 +2,7 @@ package org.example
 
 import arrow.core.getOrElse
 import org.example.config.loadEnvironmentVariables
+import org.example.domain.model.Id
 import org.example.http.auth.*
 import org.example.http.server.redirectHandler
 import org.example.http.server.routes
@@ -76,6 +77,6 @@ fun main() {
 
     while (true) {
         Thread.sleep(Duration.ofSeconds(20))
-        println(youTubeRestClient.youtubePlaylists())
+        println(youTubeRestClient.items(Id("PLzpx5onT8uO7twspWp7VdhbEAfI8DT9oy")))
     }
 }

@@ -12,7 +12,7 @@ import org.example.domain.model.Id
 import org.example.domain.model.Name
 import org.example.http.youtube.client.YouTubeRestClient
 import org.example.http.youtube.model.Playlist
-import org.example.http.youtube.model.Snippet
+import org.example.http.youtube.model.PlaylistSnippet
 import org.http4k.core.HttpHandler
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
@@ -29,7 +29,7 @@ class YouTubeRestClientTest {
 
         val playlists = client.youtubePlaylists()
 
-        playlists shouldBeRight listOf(Playlist(Id("playlist-id"), Snippet(Name("playlist-name"))))
+        playlists shouldBeRight listOf(Playlist(Id("playlist-id"), PlaylistSnippet(Name("playlist-name"))))
     }
 
     @Test
@@ -49,8 +49,8 @@ class YouTubeRestClientTest {
         val playlists = client.youtubePlaylists()
 
         playlists shouldBeRight listOf(
-            Playlist(Id("first-id"), Snippet(Name("first-name"))),
-            Playlist(Id("second-id"), Snippet(Name("second-name")))
+            Playlist(Id("first-id"), PlaylistSnippet(Name("first-name"))),
+            Playlist(Id("second-id"), PlaylistSnippet(Name("second-name")))
         )
     }
 

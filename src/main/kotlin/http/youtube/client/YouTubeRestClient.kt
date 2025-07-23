@@ -6,10 +6,12 @@ import org.example.config.bodyLens
 import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
+import org.example.domain.model.Id
 import org.example.domain.model.Playlist
 import org.example.domain.music.MusicService
 import org.example.http.auth.TokenManager
 import org.example.http.youtube.model.Page
+import org.example.http.youtube.model.PlaylistItem
 import org.example.util.catchJsonError
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
@@ -23,12 +25,21 @@ class YouTubeRestClient(
     private val baseUrl: String
 ) : MusicService {
     private val playlistLens = bodyLens<Page<org.example.http.youtube.model.Playlist>>()
+    private val playlistItemLens = bodyLens<Page<PlaylistItem>>()
 
     override fun playlists(): Either<Error, List<Playlist>> {
         TODO("Not yet implemented")
     }
 
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)
+
+    fun items(playlistId: Id): Either<HttpError, List<PlaylistItem>> = either {
+        recursivePagination(
+            "$baseUrl/playlistItems?part=id,snippet&playlistId=${playlistId.value}",
+            null,
+            playlistItemLens
+        ).bind()
+    }
 
     private fun <T> recursivePagination(
         url: String,

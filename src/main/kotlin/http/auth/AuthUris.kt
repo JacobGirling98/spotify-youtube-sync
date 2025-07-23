@@ -40,7 +40,7 @@ data class YouTubeAuth(override val localServiceUri: String) : AuthUris {
     override val internalRedirectRoute: String = "youtube_callback"
     override val baseCodeUri: String = "https://accounts.google.com/o/oauth2/auth"
     override val tokenUri: String = "https://oauth2.googleapis.com/token"
-    override val scope: String = "https://www.googleapis.com/auth/youtube.readonly"
+    override val scope: String = "https://www.googleapis.com/auth/youtube"
 
     fun codeUri(clientId: String) = codeUri(clientId, "access_type=offline&prompt=consent")
 }
