@@ -6,8 +6,13 @@ import org.example.config.bodyLens
 import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
+import org.example.domain.model.Artist
 import org.example.domain.model.Id
 import org.example.domain.model.Playlist
+import org.example.domain.model.Service
+import org.example.domain.model.ServiceIds
+import org.example.domain.model.Song
+import org.example.domain.model.SongDictionary
 import org.example.domain.music.MusicService
 import org.example.http.auth.TokenManager
 import org.example.http.youtube.model.Page
@@ -27,18 +32,28 @@ class YouTubeRestClient(
     private val playlistLens = bodyLens<Page<org.example.http.youtube.model.Playlist>>()
     private val playlistItemLens = bodyLens<Page<PlaylistItem>>()
 
-    override fun playlists(): Either<Error, List<Playlist>> {
-        TODO("Not yet implemented")
+    override fun playlists(): Either<Error, List<Playlist>> = either {
+        youtubePlaylists().bind().map { playlist ->
+            Playlist(
+                playlist.snippet.title,
+                items(playlist.id).bind()
+            )
+        }
     }
 
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)
 
-    fun items(playlistId: Id): Either<HttpError, List<PlaylistItem>> = either {
-        recursivePagination(
+    fun items(playlistId: Id): Either<HttpError, SongDictionary> = either {
+        val playlistItems = recursivePagination(
             "$baseUrl/playlistItems?part=id,snippet&playlistId=${playlistId.value}",
             null,
             playlistItemLens
         ).bind()
+        SongDictionary(playlistItems.associate { item ->
+            Song(item.snippet.title, listOf(Artist(item.snippet.videoOwnerChannelTitle.value))) to ServiceIds(
+                Service.YOUTUBE_MUSIC to item.id
+            )
+        })
     }
 
     private fun <T> recursivePagination(

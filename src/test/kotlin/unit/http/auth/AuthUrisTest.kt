@@ -17,6 +17,6 @@ class AuthUrisTest {
 
     @Test
     fun `should return an youtube URL`() {
-        youTubeAuth.codeUri("client-id") shouldBe "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=client-id&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.readonly&redirect_uri=local-server/youtube_callback&access_type=offline&prompt=consent"
+        youTubeAuth.codeUri("client-id") shouldBe "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=client-id&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube&redirect_uri=local-server/youtube_callback&access_type=offline&prompt=consent"
     }
 }
