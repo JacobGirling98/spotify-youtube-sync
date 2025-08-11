@@ -208,4 +208,23 @@ class YouTubeRestClientTest {
             )
         )
     }
+
+    @Test
+    fun `removes ' - topic' from the channel name`() {
+        val http: HttpHandler = { request ->
+            request.uri.toString() shouldInclude playlistId
+            Response(OK).body(youTubePlaylistItems(song, "The band - Topic", songId))
+        }
+
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        val tracks = client.items(Id(playlistId))
+
+        tracks shouldBeRight SongDictionary(
+            Song(
+                Name(song),
+                listOf(Artist("The band"))
+            ) to ServiceIds(YOUTUBE_MUSIC to Id(songId))
+        )
+    }
 }

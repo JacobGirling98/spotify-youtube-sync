@@ -50,7 +50,7 @@ class YouTubeRestClient(
             playlistItemLens
         ).bind()
         SongDictionary(playlistItems.associate { item ->
-            Song(item.snippet.title, listOf(Artist(item.snippet.videoOwnerChannelTitle.value))) to ServiceIds(
+            Song(item.snippet.title, listOf(item.snippet.videoOwnerChannelTitle.value.asArtist())) to ServiceIds(
                 Service.YOUTUBE_MUSIC to item.id
             )
         })
@@ -76,3 +76,5 @@ class YouTubeRestClient(
     }
 
 }
+
+private fun String.asArtist() = Artist(replace(" - Topic", ""))
