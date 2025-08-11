@@ -6,6 +6,7 @@ import org.example.config.bodyLens
 import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
+import org.example.domain.error.NoResultsError
 import org.example.domain.model.*
 import org.example.domain.model.Service.YOUTUBE_MUSIC
 import org.example.domain.music.MusicService
@@ -50,9 +51,9 @@ class YouTubeRestClient(
 
         val page = catchJsonError { searchLens(response) }.bind()
 
-        SongDictionary(
-            song to ServiceIds(YOUTUBE_MUSIC to page.items.first().id.videoId)
-        )
+        val firstResult = page.items.firstOrNull() ?: raise(NoResultsError(song))
+
+        SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to firstResult.id.videoId))
     }
 
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)

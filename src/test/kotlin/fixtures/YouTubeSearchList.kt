@@ -2,6 +2,17 @@ package fixtures
 
 import util.jsonify
 
+fun youTubeSearchListWithNoResults() = """{
+    "kind": "youtube#playlistItemListResponse",
+    "etag": "6RWuhXexRX_p_SgwX2svaG35X7Y",
+    "nextPageToken": null,
+    "pageInfo": {
+    "totalResults": 10,
+    "resultsPerPage": 5
+    },
+    "items": []
+}""".trimMargin()
+
 fun youTubeSearchList(id: String, next: String? = null) = """{
   "kind": "youtube#playlistItemListResponse",
   "etag": "6RWuhXexRX_p_SgwX2svaG35X7Y",
