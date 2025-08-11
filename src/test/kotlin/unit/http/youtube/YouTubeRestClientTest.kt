@@ -3,6 +3,7 @@ package unit.http.youtube
 import fixtures.TestTokenManager
 import fixtures.youTubeCurrentUserPlaylists
 import fixtures.youTubePlaylistItems
+import fixtures.youTubeSearchList
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
@@ -226,5 +227,47 @@ class YouTubeRestClientTest {
                 listOf(Artist("The band"))
             ) to ServiceIds(YOUTUBE_MUSIC to Id(songId))
         )
+    }
+
+    @Test
+    fun `can search for a song and get the resulting ids`() {
+        val song = Song(Name("My song"), listOf(Artist("My artist")))
+        val http: HttpHandler = { request ->
+            request.query("q") shouldBe "My song My artist"
+            request.query("part") shouldBe "snippet,id"
+            request.query("type") shouldBe "video"
+            Response(OK).body(youTubeSearchList("video-id"))
+        }
+
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        val songDictionary = client.search(song)
+
+        songDictionary shouldBeRight SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to Id("video-id")))
+    }
+
+    @Test
+    fun `error if no search results`() {
+
+    }
+
+    @Test
+    fun `fails when searching if json is not as expected`() {
+
+    }
+
+    @Test
+    fun `token is passed to request for search`() {
+
+    }
+
+    @Test
+    fun `fails for search if token manager fails to return a token`() {
+
+    }
+
+    @Test
+    fun `fails for search if youtube returns a 4xx code`() {
+
     }
 }
