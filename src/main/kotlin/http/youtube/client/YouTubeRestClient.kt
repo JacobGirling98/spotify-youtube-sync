@@ -41,6 +41,10 @@ class YouTubeRestClient(
         }
     }
 
+    override fun search(song: Song): Either<Error, SongDictionary> {
+        TODO("Not yet implemented")
+    }
+
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)
 
     fun items(playlistId: Id): Either<HttpError, SongDictionary> = either {

@@ -5,6 +5,7 @@ package org.example.http.spotify.client
 import arrow.core.Either
 import arrow.core.raise.either
 import org.example.config.bodyLens
+import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
 import org.example.domain.model.*
@@ -36,6 +37,10 @@ class SpotifyRestClient(
                 tracks(playlist.id).bind()
             )
         }
+    }
+
+    override fun search(song: Song): Either<Error, SongDictionary> {
+        TODO("Not yet implemented")
     }
 
     fun spotifyPlaylists(): Either<HttpError, List<Playlist>> =
