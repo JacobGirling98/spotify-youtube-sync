@@ -12,6 +12,7 @@ import org.example.domain.model.Service.YOUTUBE_MUSIC
 import org.example.domain.music.MusicService
 import org.example.domain.music.createDictionary
 import org.example.domain.music.fillDictionary
+import org.example.domain.music.subsetOf
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -132,6 +133,37 @@ class DictionaryTest {
         resultingDictionary shouldBe ErrorWrapper(listOf(NoResultsError(otherSong)), initialDictionary)
     }
 
+    @Test
+    fun `taking a subset of a dictionary takes the song from the target`() {
+        val source = SongDictionary(song to spotifyServiceId)
+        val target = SongDictionary(song to youtubeServiceId)
+
+        source.subsetOf(target) shouldBe target
+    }
+
+    @Test
+    fun `if a song from the source is not in the target, then it is not returned`() {
+        val source = SongDictionary(song to spotifyServiceId)
+        val target = SongDictionary(otherSong to spotifyServiceId)
+
+        source.subsetOf(target) shouldBe SongDictionary.empty()
+    }
+
+    @Test
+    fun `takes the expected subset if the target dictionary is larger`() {
+        val source = SongDictionary(song to spotifyServiceId)
+        val target = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
+            otherSong to spotifyServiceId
+        )
+
+        source.subsetOf(target) shouldBe SongDictionary(
+            song to ServiceIds(
+                SPOTIFY to spotifyId,
+                YOUTUBE_MUSIC to youtubeId
+            ),
+        )
+    }
 }
 
 

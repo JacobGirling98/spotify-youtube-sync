@@ -29,9 +29,7 @@ fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorW
         }
     }
 
-fun SongDictionary.subsetOf(other: SongDictionary): SongDictionary {
-    TODO()
-}
+fun SongDictionary.subsetOf(other: SongDictionary): SongDictionary = SongDictionary(other.entries.filterKeys { song -> song in entries.keys })
 
 private fun <T> Either<Error, T>.accumulateWith(wrapper: ErrorWrapper<T>): ErrorWrapper<T> = fold(
     { ErrorWrapper(wrapper.errors + it, wrapper.value) },
