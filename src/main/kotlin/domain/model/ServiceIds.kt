@@ -12,6 +12,8 @@ data class ServiceIds(
     constructor(vararg pairs: Pair<Service, Id>) : this(mapOf(*pairs))
 
     fun mergeWith(other: ServiceIds): Either<MergeError, ServiceIds> = either {
-        ServiceIds(entries.combine(other.entries) { first, second -> first })
+        ServiceIds(entries.combine(other.entries) { first, _ -> first })
     }
+
+    val services = entries.keys
 }

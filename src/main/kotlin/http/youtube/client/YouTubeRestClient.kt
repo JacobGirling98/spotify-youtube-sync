@@ -30,6 +30,8 @@ class YouTubeRestClient(
     private val playlistItemLens = bodyLens<Page<PlaylistItem>>()
     private val searchLens = bodyLens<Page<Search>>()
 
+    override val service: Service = YOUTUBE_MUSIC
+
     override fun playlists(): Either<Error, List<Playlist>> = either {
         youtubePlaylists().bind().map { playlist ->
             Playlist(

@@ -1,14 +1,19 @@
 package unit.domain.music
 
+import arrow.core.Either
 import fixtures.*
 import io.kotest.assertions.arrow.core.shouldBeRight
-import org.example.domain.model.Id
+import io.kotest.matchers.shouldBe
+import org.example.domain.error.Error
+import org.example.domain.error.NoResultsError
+import org.example.domain.model.*
 import org.example.domain.model.Service.SPOTIFY
 import org.example.domain.model.Service.YOUTUBE_MUSIC
-import org.example.domain.model.ServiceIds
-import org.example.domain.model.SongDictionary
+import org.example.domain.music.MusicService
 import org.example.domain.music.createDictionary
+import org.example.domain.music.fillDictionary
 import kotlin.test.Test
+import kotlin.test.fail
 
 class DictionaryTest {
     private val song = song("My Song")
@@ -43,5 +48,110 @@ class DictionaryTest {
             song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
             otherSong to otherServiceId
         )
+    }
+
+    @Test
+    fun `original dictionary returned if a single song with both services`() {
+        val initialDictionary = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId)
+        )
+        val youTubeMusic = FakeYouTubeMusic(song to Id("2"), failOnSearch = true)
+
+        val resultingDictionary = initialDictionary.fillDictionary(SPOTIFY, youTubeMusic)
+
+        resultingDictionary shouldBe initialDictionary.withNoErrors()
+    }
+
+    @Test
+    fun `original dictionary returned if multiple songs with both services`() {
+        val initialDictionary = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
+            otherSong to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
+        )
+        val youTubeMusic = FakeYouTubeMusic(song to youtubeId, failOnSearch = true)
+
+        val resultingDictionary = initialDictionary.fillDictionary(SPOTIFY, youTubeMusic)
+
+        resultingDictionary shouldBe initialDictionary.withNoErrors()
+    }
+
+    @Test
+    fun `searches for a song if the service id is missing for the target`() {
+        val initialDictionary = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId),
+        )
+        val expectedDictionary = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
+        )
+        val youTubeMusic = FakeYouTubeMusic(song to youtubeId)
+
+        val resultingDictionary = initialDictionary.fillDictionary(SPOTIFY, youTubeMusic)
+
+        resultingDictionary shouldBe expectedDictionary.withNoErrors()
+    }
+
+    @Test
+    fun `returns dictionary with an unchanged song and a new song`() {
+        val initialDictionary = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
+            otherSong to ServiceIds(SPOTIFY to spotifyId),
+        )
+        val expectedDictionary = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
+            otherSong to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to otherId),
+        )
+        val youTubeMusic = FakeYouTubeMusic(otherSong to otherId)
+
+        val resultingDictionary = initialDictionary.fillDictionary(SPOTIFY, youTubeMusic)
+
+        resultingDictionary shouldBe expectedDictionary.withNoErrors()
+    }
+
+    @Test
+    fun `ignores songs if no service id for the source system`() {
+        val initialDictionary = SongDictionary(
+            song to ServiceIds(YOUTUBE_MUSIC to youtubeId)
+        )
+        val youTubeMusic = FakeYouTubeMusic(song to otherId, failOnSearch = true)
+
+        val resultingDictionary = initialDictionary.fillDictionary(SPOTIFY, youTubeMusic)
+
+        resultingDictionary shouldBe initialDictionary.withNoErrors()
+    }
+
+    @Test
+    fun `returns any errors from searching, along with the dictionary`() {
+        val initialDictionary = SongDictionary(
+            song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
+            otherSong to ServiceIds(SPOTIFY to spotifyId),
+        )
+        val youTubeMusic = FakeYouTubeMusic() // won't be able to find "otherSong"
+
+        val resultingDictionary = initialDictionary.fillDictionary(SPOTIFY, youTubeMusic)
+
+        resultingDictionary shouldBe ErrorWrapper(listOf(NoResultsError(otherSong)), initialDictionary)
+    }
+
+}
+
+
+private class FakeYouTubeMusic private constructor(
+    private val songs: Map<Song, Id>,
+    private val failOnSearch: Boolean
+) : MusicService {
+    constructor(vararg songs: Pair<Song, Id>, failOnSearch: Boolean = false) : this(mapOf(*songs), failOnSearch)
+
+    override val service: Service = YOUTUBE_MUSIC
+
+    override fun playlists(): Either<Error, List<Playlist>> {
+        TODO("Not needed")
+    }
+
+    override fun search(song: Song): Either<Error, SongDictionary> {
+        if (failOnSearch) fail("Search was called but should not have been called: ${song.name.value}")
+
+        val matchingId = songs[song]
+        return if (matchingId != null) Either.Right(SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to matchingId)))
+        else Either.Left(NoResultsError(song))
     }
 }

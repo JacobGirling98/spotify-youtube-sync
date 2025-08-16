@@ -30,6 +30,8 @@ class SpotifyRestClient(
     private val playlistLens = bodyLens<Page<Playlist>>()
     private val trackLens = bodyLens<Page<PlaylistItem>>()
 
+    override val service: Service = Service.SPOTIFY
+
     override fun playlists(): Either<HttpError, List<org.example.domain.model.Playlist>> = either {
         spotifyPlaylists().bind().map { playlist ->
             Playlist(
