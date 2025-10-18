@@ -58,6 +58,10 @@ class YouTubeRestClient(
         SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to firstResult.id.videoId))
     }
 
+    override fun deletePlaylist(id: Id): Either<Error, Unit> {
+        TODO("Not yet implemented")
+    }
+
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)
 
     fun items(playlistId: Id): Either<HttpError, SongDictionary> = either {

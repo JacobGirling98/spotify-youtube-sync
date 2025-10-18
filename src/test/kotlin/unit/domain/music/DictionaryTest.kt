@@ -186,4 +186,8 @@ private class FakeYouTubeMusic private constructor(
         return if (matchingId != null) Either.Right(SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to matchingId)))
         else Either.Left(NoResultsError(song))
     }
+
+    override fun deletePlaylist(id: Id): Either<Error, Unit> {
+        TODO("Not yet implemented")
+    }
 }

@@ -45,6 +45,10 @@ class SpotifyRestClient(
         TODO("Not yet implemented")
     }
 
+    override fun deletePlaylist(id: Id): Either<Error, Unit> {
+        TODO("Not yet implemented")
+    }
+
     fun spotifyPlaylists(): Either<HttpError, List<Playlist>> =
         recursivePagination("$baseUrl/me/playlists", playlistLens)
 
