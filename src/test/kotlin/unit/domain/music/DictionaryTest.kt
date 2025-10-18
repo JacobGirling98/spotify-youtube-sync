@@ -30,7 +30,7 @@ class DictionaryTest {
     fun `can create a dictionary from a single playlist`() {
         val playlists = listOf(playlist("My playlist", songDictionary(song, spotifyServiceId)))
 
-        val dictionary = createDictionary(playlists)
+        val dictionary = playlists.createDictionary()
 
         dictionary shouldBeRight SongDictionary(song to spotifyServiceId)
     }
@@ -43,7 +43,7 @@ class DictionaryTest {
             playlist("My youtube playlist", songDictionary(song, youtubeServiceId)),
         )
 
-        val dictionary = createDictionary(playlists)
+        val dictionary = playlists.createDictionary()
 
         dictionary shouldBeRight SongDictionary(
             song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),

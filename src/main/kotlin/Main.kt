@@ -1,8 +1,12 @@
 package org.example
 
+import arrow.core.flatMap
 import arrow.core.getOrElse
+import arrow.core.raise.either
 import org.example.config.loadEnvironmentVariables
-import org.example.domain.model.Id
+import org.example.domain.model.Service
+import org.example.domain.music.createDictionary
+import org.example.domain.music.fillDictionary
 import org.example.http.auth.*
 import org.example.http.server.redirectHandler
 import org.example.http.server.routes
@@ -77,6 +81,17 @@ fun main() {
 
     while (true) {
         Thread.sleep(Duration.ofSeconds(20))
-        println(youTubeRestClient.items(Id("PLzpx5onT8uO7twspWp7VdhbEAfI8DT9oy")))
+
+        val spotifyPlaylists = spotifyClient.playlists()
+        val youtubePlaylists = youTubeRestClient.playlists()
+
+        val songDictionary = either { spotifyPlaylists.bind() + youtubePlaylists.bind() }
+            .flatMap { it.createDictionary() }
+            .map { it.fillDictionary(Service.SPOTIFY, youTubeRestClient) }
+
+        // loop over spotify playlists
+        // if that playlist exists in youtube, delete
+        // create new playlist on youtube
+        // add songs to it
     }
 }
