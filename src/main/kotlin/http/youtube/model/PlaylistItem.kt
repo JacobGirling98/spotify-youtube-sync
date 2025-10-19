@@ -13,3 +13,16 @@ data class PlaylistItemSnippet(
     val videoOwnerChannelId: Id,
     val videoOwnerChannelTitle: Name
 )
+
+data class PlaylistItemRequest(
+    val snippet: PlaylistItemSnippetRequest
+)
+
+data class PlaylistItemSnippetRequest(
+    val playlistId: Id,
+    val resourceId: ResourceId
+)
+
+data class ResourceId(
+    val videoId: Id
+)
