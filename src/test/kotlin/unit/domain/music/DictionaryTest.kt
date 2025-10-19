@@ -190,4 +190,11 @@ private class FakeYouTubeMusic private constructor(
     override fun deletePlaylist(id: Id): Either<Error, Unit> {
         TODO("Not yet implemented")
     }
+
+    override fun addSongToPlaylist(
+        songId: Id,
+        playlistId: Id
+    ): Either<Error, Unit> {
+        TODO("Not yet implemented")
+    }
 }
