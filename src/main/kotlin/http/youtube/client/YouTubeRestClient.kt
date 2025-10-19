@@ -16,6 +16,7 @@ import org.example.http.youtube.model.PlaylistItem
 import org.example.http.youtube.model.Search
 import org.example.util.catchJsonError
 import org.http4k.core.HttpHandler
+import org.http4k.core.Method
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.lens.BodyLens
@@ -58,8 +59,13 @@ class YouTubeRestClient(
         SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to firstResult.id.videoId))
     }
 
-    override fun deletePlaylist(id: Id): Either<Error, Unit> {
-        TODO("Not yet implemented")
+    override fun deletePlaylist(id: Id): Either<Error, Unit> = either {
+        val request = Request(Method.DELETE, "$baseUrl/playlists")
+            .bearerAuth(tokenManager.token().bind().value)
+            .query("id", id.value)
+        val response = http(request)
+
+        if (!response.status.successful) raise(HttpResponseError.from(response))
     }
 
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)
