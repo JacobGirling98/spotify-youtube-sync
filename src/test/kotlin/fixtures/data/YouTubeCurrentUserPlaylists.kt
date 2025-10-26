@@ -1,4 +1,4 @@
-package fixtures
+package fixtures.data
 
 import util.jsonify
 

@@ -1,4 +1,4 @@
-package fixtures
+package fixtures.data
 
 import org.example.domain.model.*
 import org.example.domain.model.Service.SPOTIFY

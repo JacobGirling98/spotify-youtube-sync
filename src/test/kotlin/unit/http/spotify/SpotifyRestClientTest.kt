@@ -3,9 +3,9 @@
 package unit.http.spotify
 
 import fixtures.TestTokenManager
-import fixtures.spotifyCurrentUserPlaylists
-import fixtures.spotifyPlaylistItems
-import fixtures.spotifyPlaylistItemsWithoutTrack
+import fixtures.data.spotifyCurrentUserPlaylists
+import fixtures.data.spotifyPlaylistItems
+import fixtures.data.spotifyPlaylistItemsWithoutTrack
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
