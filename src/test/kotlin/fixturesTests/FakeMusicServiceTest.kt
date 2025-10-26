@@ -1,10 +1,8 @@
 package fixturesTests
 
-import fixtures.FakeMusicService
 import fixtures.data.song
 import org.example.domain.model.Id
 import org.example.domain.model.Name
-import org.example.domain.model.Service
 import kotlin.test.Test
 
 class FakeMusicServiceTest {
@@ -26,7 +24,6 @@ class FakeMusicServiceTest {
 
     @Test
     fun `just returns the given playlists`() {
-        val service = FakeMusicService(Service.SPOTIFY, mapOf(firstSong to firstId, secondSong to secondId))
 
 
     }

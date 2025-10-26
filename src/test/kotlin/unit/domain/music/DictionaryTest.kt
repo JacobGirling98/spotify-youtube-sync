@@ -4,6 +4,7 @@ import arrow.core.Either
 import fixtures.data.*
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
+import org.example.domain.error.Error
 import org.example.domain.error.NoResultsError
 import org.example.domain.model.*
 import org.example.domain.model.Service.SPOTIFY
