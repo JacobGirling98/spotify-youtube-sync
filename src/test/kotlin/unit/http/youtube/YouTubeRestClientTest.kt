@@ -21,7 +21,9 @@ import org.example.http.youtube.model.PlaylistSnippet
 import org.http4k.core.HttpHandler
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
+import org.http4k.core.Status.Companion.NO_CONTENT
 import org.http4k.core.Status.Companion.OK
+import org.http4k.kotest.shouldHaveBody
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -302,5 +304,89 @@ class YouTubeRestClientTest {
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
         client.search(song) shouldBeLeft HttpResponseError(400, "oh dear")
+    }
+
+    @Test
+    fun `can delete a playlist`() {
+        val http: HttpHandler = {
+            if (it.query("id") == "id") {
+                Response(NO_CONTENT)
+            } else {
+                fail("Wrong playlist id passed")
+            }
+
+        }
+
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        client.deletePlaylist(Id("id")) shouldBeRight Unit
+    }
+
+    @Test
+    fun `token is passed to request to delete a playlist`() {
+        val http: HttpHandler = { request ->
+            request.header("Authorization") shouldBe "Bearer my-token"
+            Response(NO_CONTENT)
+        }
+
+        val client = YouTubeRestClient(http, TestTokenManager("my-token"), "youtube")
+
+        client.deletePlaylist(Id("id"))
+    }
+
+    @Test
+    fun `fails for delete playlist if token manager fails to return a token`() {
+        val http: HttpHandler = { Response(NO_CONTENT) }
+        val client = YouTubeRestClient(http, TestTokenManager(tokenFailure = true), "youtube")
+
+        client.deletePlaylist(Id("id")).leftOrNull().shouldBeInstanceOf<HttpResponseError>()
+    }
+
+    @Test
+    fun `fails for delete playlist if youtube returns a 4xx code`() {
+        val http: HttpHandler = { Response(BAD_REQUEST).body("oh dear") }
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        client.deletePlaylist(Id("id")) shouldBeLeft HttpResponseError(400, "oh dear")
+    }
+
+    @Test
+    fun `can add a song to a playlist`() {
+        val http: HttpHandler = { request ->
+            request shouldHaveBody """{"snippet":{"playlistId":"playlist-id","resourceId":{"videoId":"song-id"}}}"""
+            request.query("part") shouldBe "snippet"
+            Response(OK)
+        }
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        client.addSongToPlaylist(Id("song-id"), Id("playlist-id")) shouldBeRight Unit
+    }
+
+    @Test
+    fun `token is passed to request for adding song to playlists`() {
+        val http: HttpHandler = { request ->
+            request.header("Authorization") shouldBe "Bearer my-token"
+            Response(OK)
+        }
+
+        val client = YouTubeRestClient(http, TestTokenManager("my-token"), "youtube")
+
+        client.addSongToPlaylist(Id("song-id"), Id("playlist-id"))
+    }
+
+    @Test
+    fun `fails for adding a song to a playlist if token manager fails to return a token`() {
+        val http: HttpHandler = { Response(OK) }
+        val client = YouTubeRestClient(http, TestTokenManager(tokenFailure = true), "youtube")
+
+        client.addSongToPlaylist(Id("song-id"), Id("playlist-id")).leftOrNull().shouldBeInstanceOf<HttpResponseError>()
+    }
+
+    @Test
+    fun `fails for adding a song to a playlist if youtube returns a 4xx code`() {
+        val http: HttpHandler = { Response(BAD_REQUEST).body("oh dear") }
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        client.addSongToPlaylist(Id("song-id"), Id("playlist-id")) shouldBeLeft HttpResponseError(400, "oh dear")
     }
 }

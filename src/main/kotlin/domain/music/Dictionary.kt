@@ -8,9 +8,11 @@ import org.example.domain.error.Error
 import org.example.domain.error.MergeError
 import org.example.domain.model.*
 
-fun createDictionary(playlists: List<Playlist>): Either<MergeError, SongDictionary> = either {
-    playlists.fold(SongDictionary.empty()) { acc, playlist -> acc.mergeWith(playlist.songs).bind() }
+fun List<Playlist>.createDictionary(): Either<MergeError, SongDictionary> = either {
+    fold(SongDictionary.empty()) { acc, playlist -> acc.mergeWith(playlist.songs).bind() }
 }
+
+
 
 fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorWrapper<SongDictionary> =
     entries.fold(SongDictionary.empty().withNoErrors()) { wrapper, (song, serviceIds) ->

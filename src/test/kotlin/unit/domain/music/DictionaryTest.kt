@@ -29,7 +29,7 @@ class DictionaryTest {
     fun `can create a dictionary from a single playlist`() {
         val playlists = listOf(playlist("My playlist", songDictionary(song, spotifyServiceId)))
 
-        val dictionary = createDictionary(playlists)
+        val dictionary = playlists.createDictionary()
 
         dictionary shouldBeRight SongDictionary(song to spotifyServiceId)
     }
@@ -42,7 +42,7 @@ class DictionaryTest {
             playlist("My youtube playlist", songDictionary(song, youtubeServiceId)),
         )
 
-        val dictionary = createDictionary(playlists)
+        val dictionary = playlists.createDictionary()
 
         dictionary shouldBeRight SongDictionary(
             song to ServiceIds(SPOTIFY to spotifyId, YOUTUBE_MUSIC to youtubeId),
@@ -184,5 +184,16 @@ private class FakeYouTubeMusic private constructor(
         val matchingId = songs[song]
         return if (matchingId != null) Either.Right(SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to matchingId)))
         else Either.Left(NoResultsError(song))
+    }
+
+    override fun deletePlaylist(id: Id): Either<Error, Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override fun addSongToPlaylist(
+        songId: Id,
+        playlistId: Id
+    ): Either<Error, Unit> {
+        TODO("Not yet implemented")
     }
 }
