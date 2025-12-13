@@ -6,5 +6,5 @@ import org.example.domain.model.SongDictionary
 
 interface SongDictionaryRepository {
     fun load(): Either<Error, SongDictionary>
-    fun save(dictionary: SongDictionary)
+    fun save(dictionary: SongDictionary): Either<Error, Unit>
 }

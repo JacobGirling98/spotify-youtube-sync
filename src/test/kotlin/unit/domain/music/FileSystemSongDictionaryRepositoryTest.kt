@@ -58,7 +58,8 @@ class FileSystemSongDictionaryRepositoryTest {
             song2 to serviceIds(Service.YOUTUBE_MUSIC, Id("youtube456"))
         )
 
-        repository.save(dictionary)
+        val saveResult = repository.save(dictionary)
+        saveResult shouldBe Unit.right()
 
         val result = repository.load()
         result shouldBe dictionary.right()
@@ -79,11 +80,25 @@ class FileSystemSongDictionaryRepositoryTest {
         val initialDictionary = SongDictionary(song("Initial") to serviceIds(Service.SPOTIFY, Id("initial")))
         val newDictionary = SongDictionary(song("New") to serviceIds(Service.YOUTUBE_MUSIC, Id("new")))
 
-        repository.save(initialDictionary)
-        repository.save(newDictionary)
+        repository.save(initialDictionary) shouldBe Unit.right()
+        repository.save(newDictionary) shouldBe Unit.right()
 
         val result = repository.load()
 
         result shouldBe newDictionary.right()
+    }
+
+    @Test
+    fun `should return a json error when saving to a read-only file`() {
+        // Arrange
+        val dictionary = SongDictionary(song("Test") to serviceIds(Service.SPOTIFY, Id("test123")))
+        tempFile.setReadOnly()
+
+        // Act
+        val saveResult = repository.save(dictionary)
+
+        // Assert
+        saveResult.isLeft() shouldBe true
+        saveResult.leftOrNull().shouldBeInstanceOf<JsonError>()
     }
 }

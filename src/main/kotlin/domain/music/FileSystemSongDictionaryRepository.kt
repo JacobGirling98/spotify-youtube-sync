@@ -33,13 +33,14 @@ class FileSystemSongDictionaryRepository(
         }
     }
 
-    override fun save(dictionary: SongDictionary) {
-        try {
+    override fun save(dictionary: SongDictionary): Either<Error, Unit> {
+        return try {
             val entryList = dictionary.entries.map { (song, ids) -> SongDictionaryEntry(song, ids) }
             val jsonString = CustomJackson.asFormatString(entryList)
             file.writeText(jsonString)
+            Unit.right()
         } catch (e: Exception) {
-            println("Error saving song dictionary cache. Error: ${e.message}")
+            JsonError(e.message).left()
         }
     }
 }
