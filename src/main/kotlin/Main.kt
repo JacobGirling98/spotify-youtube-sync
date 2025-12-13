@@ -83,32 +83,14 @@ fun main() {
     val youTubeRestClient =
         YouTubeRestClient(retry(client), youTubeTokenManager, "https://www.googleapis.com/youtube/v3")
 
+    // Instantiate repositories
+    val songDictionaryRepository = DefaultSongDictionaryRepository()
+    val playlistRepository = DefaultPlaylistRepository() // New repository instantiation
+
     println(youtubeConfig.codeUri(environment.youtubeClientId))
 
     while (true) {
-        Thread.sleep(Duration.ofSeconds(20))
-
-        val spotifyPlaylists = spotifyClient.playlists()
-        val youtubePlaylists = youTubeRestClient.playlists()
-
-        val unifyResult = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient)
-
-//        unifyResult.fold(
-//            { error -> println("Error unifying dictionary: ${error.message}") },
-//            { errorWrapper ->
-//                val songDictionary = errorWrapper.value
-//                val repository = DefaultSongDictionaryRepository()
-//                repository.save(songDictionary).fold(
-//                    { error -> println("Error saving song dictionary: ${error.message}") },
-//                    { println("Song dictionary saved successfully.") }
-//                )
-//            }
-//        )
-
-        // loop over spotify playlists
-        // if that playlist exists in youtube, delete
-        // create new playlist on youtube
-        // add songs to it
+        sync(spotifyClient, youTubeRestClient, songDictionaryRepository, playlistRepository) // Call sync function
     }
 }
 
@@ -119,3 +101,39 @@ private fun unifyDictionary(
 ): Either<Error, ErrorWrapper<SongDictionary>> = either { spotifyPlaylists.bind() + youtubePlaylists.bind() }
     .flatMap { it.createDictionary() }
     .map { it.fillDictionary(Service.SPOTIFY, youTubeRestClient) }
+
+private fun sync(
+    spotifyClient: SpotifyRestClient,
+    youTubeRestClient: YouTubeRestClient,
+    songDictionaryRepository: DefaultSongDictionaryRepository,
+    playlistRepository: DefaultPlaylistRepository
+) {
+    Thread.sleep(Duration.ofSeconds(20))
+
+    val spotifyPlaylists = spotifyClient.playlists()
+    val youtubePlaylists = youTubeRestClient.playlists()
+
+    val unifyResult = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient)
+
+    unifyResult.fold(
+        { error -> println("Error unifying dictionary: ${error.message}") },
+        { errorWrapper ->
+            val songDictionary = errorWrapper.value
+            songDictionaryRepository.save(songDictionary).fold(
+                { error -> println("Error saving song dictionary: ${error.message}") },
+                { println("Song dictionary saved successfully.") }
+            )
+
+            val allPlaylists = spotifyPlaylists.getOrElse { emptyList() } + youtubePlaylists.getOrElse { emptyList() }
+            playlistRepository.save(allPlaylists).fold(
+                { error -> println("Error saving playlists: ${error.message}") },
+                { println("Playlists saved successfully.") }
+            )
+        }
+    )
+
+    // loop over spotify playlists
+    // if that playlist exists in youtube, delete
+    // create new playlist on youtube
+    // add songs to it
+}
