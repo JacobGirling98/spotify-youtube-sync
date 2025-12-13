@@ -179,6 +179,10 @@ private class FakeYouTubeMusic private constructor(
         TODO("Not needed")
     }
 
+    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> {
+        TODO("Not needed for these tests")
+    }
+
     override fun search(song: Song): Either<Error, SongDictionary> {
         if (failOnSearch) fail("Search was called but should not have been called: ${song.name.value}")
 

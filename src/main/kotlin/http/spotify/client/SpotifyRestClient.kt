@@ -9,6 +9,7 @@ import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
 import org.example.domain.model.*
+import org.example.domain.model.PlaylistMetadata
 import org.example.domain.music.MusicService
 import org.example.http.auth.TokenManager
 import org.example.http.spotify.model.Page
@@ -39,6 +40,12 @@ class SpotifyRestClient(
                 playlist.name,
                 tracks(playlist.id).bind()
             )
+        }
+    }
+
+    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> = either {
+        spotifyPlaylists().bind().map { spotifyPlaylist ->
+            PlaylistMetadata(spotifyPlaylist.id, spotifyPlaylist.name)
         }
     }
 

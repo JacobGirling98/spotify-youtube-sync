@@ -14,6 +14,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.example.domain.error.HttpResponseError
 import org.example.domain.error.JsonError
 import org.example.domain.model.*
+import org.example.domain.model.PlaylistMetadata
 import org.example.domain.model.Service.SPOTIFY
 import org.example.http.spotify.client.SpotifyRestClient
 import org.example.http.spotify.model.Playlist
@@ -219,5 +220,16 @@ class SpotifyRestClientTest {
         val songs = client.tracks(Id(playlistId))
 
         songs shouldBeRight SongDictionary.empty()
+    }
+
+    @Test
+    fun `can get playlist metadata`() {
+        val http: HttpHandler = { Response(OK).body(spotifyCurrentUserPlaylists("playlist-id", "playlist-name")) }
+
+        val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
+
+        val playlists = client.playlistMetadata()
+
+        playlists shouldBeRight listOf(PlaylistMetadata(Id("playlist-id"), Name("playlist-name")))
     }
 }

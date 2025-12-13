@@ -14,6 +14,7 @@ import org.example.domain.error.HttpResponseError
 import org.example.domain.error.JsonError
 import org.example.domain.error.NoResultsError
 import org.example.domain.model.*
+import org.example.domain.model.PlaylistMetadata
 import org.example.domain.model.Service.YOUTUBE_MUSIC
 import org.example.http.youtube.client.YouTubeRestClient
 import org.example.http.youtube.model.Playlist
@@ -389,5 +390,16 @@ class YouTubeRestClientTest {
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
         client.addSongToPlaylist(Id("song-id"), Id("playlist-id")) shouldBeLeft HttpResponseError(400, "oh dear")
+    }
+
+    @Test
+    fun `can get playlist metadata`() {
+        val http: HttpHandler = { Response(OK).body(youTubeCurrentUserPlaylists("playlist-id", "playlist-name")) }
+
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        val playlists = client.playlistMetadata()
+
+        playlists shouldBeRight listOf(PlaylistMetadata(Id("playlist-id"), Name("playlist-name")))
     }
 }

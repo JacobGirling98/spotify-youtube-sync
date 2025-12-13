@@ -4,6 +4,7 @@ import arrow.core.Either
 import org.example.domain.error.Error
 import org.example.domain.model.Id
 import org.example.domain.model.Playlist
+import org.example.domain.model.PlaylistMetadata
 import org.example.domain.model.Service
 import org.example.domain.model.Song
 import org.example.domain.model.SongDictionary
@@ -12,6 +13,7 @@ interface MusicService {
     val service: Service
 
     fun playlists(): Either<Error, List<Playlist>>
+    fun playlistMetadata(): Either<Error, List<PlaylistMetadata>>
     fun search(song: Song): Either<Error, SongDictionary>
     fun deletePlaylist(id: Id): Either<Error, Unit>
     fun addSongToPlaylist(songId: Id, playlistId: Id): Either<Error, Unit>

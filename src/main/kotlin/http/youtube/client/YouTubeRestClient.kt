@@ -7,10 +7,14 @@ import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
 import org.example.domain.error.NoResultsError
-import org.example.domain.model.*
+import org.example.domain.model.Artist
 import org.example.domain.model.Id
 import org.example.domain.model.Playlist
-import org.example.domain.model.Service.YOUTUBE_MUSIC
+import org.example.domain.model.PlaylistMetadata
+import org.example.domain.model.Service
+import org.example.domain.model.ServiceIds
+import org.example.domain.model.Song
+import org.example.domain.model.SongDictionary
 import org.example.domain.music.MusicService
 import org.example.http.auth.TokenManager
 import org.example.http.youtube.model.*
@@ -33,7 +37,7 @@ class YouTubeRestClient(
     private val searchLens = bodyLens<Page<Search>>()
     private val playlistItemRequestLens = bodyLens<PlaylistItemRequest>()
 
-    override val service: Service = YOUTUBE_MUSIC
+    override val service: Service = Service.YOUTUBE_MUSIC
 
     override fun playlists(): Either<Error, List<Playlist>> = either {
         youtubePlaylists().bind().map { playlist ->
@@ -42,6 +46,12 @@ class YouTubeRestClient(
                 playlist.snippet.title,
                 items(playlist.id).bind()
             )
+        }
+    }
+
+    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> = either {
+        youtubePlaylists().bind().map { youtubePlaylist ->
+            PlaylistMetadata(youtubePlaylist.id, youtubePlaylist.snippet.title)
         }
     }
 
@@ -59,7 +69,7 @@ class YouTubeRestClient(
 
         val firstResult = page.items.firstOrNull() ?: raise(NoResultsError(song))
 
-        SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to firstResult.id.videoId))
+        SongDictionary(song to ServiceIds(Service.YOUTUBE_MUSIC to firstResult.id.videoId))
     }
 
     override fun deletePlaylist(id: Id): Either<Error, Unit> = either {
@@ -100,7 +110,7 @@ class YouTubeRestClient(
         ).bind()
         SongDictionary(playlistItems.associate { item ->
             Song(item.snippet.title, listOf(item.snippet.videoOwnerChannelTitle.value.asArtist())) to ServiceIds(
-                YOUTUBE_MUSIC to item.id
+                Service.YOUTUBE_MUSIC to item.id
             )
         })
     }

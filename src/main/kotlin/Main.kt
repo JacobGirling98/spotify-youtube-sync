@@ -1,10 +1,16 @@
 package org.example
 
+import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.raise.either
 import org.example.config.loadEnvironmentVariables
+import org.example.domain.error.Error
+import org.example.domain.error.HttpError
+import org.example.domain.model.ErrorWrapper
+import org.example.domain.model.Playlist
 import org.example.domain.model.Service
+import org.example.domain.model.SongDictionary
 import org.example.domain.music.createDictionary
 import org.example.domain.music.fillDictionary
 import org.example.http.auth.*
@@ -85,9 +91,9 @@ fun main() {
         val spotifyPlaylists = spotifyClient.playlists()
         val youtubePlaylists = youTubeRestClient.playlists()
 
-        val songDictionary = either { spotifyPlaylists.bind() + youtubePlaylists.bind() }
-            .flatMap { it.createDictionary() }
-            .map { it.fillDictionary(Service.SPOTIFY, youTubeRestClient) }
+        val songDictionary = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient)
+
+
 
         // loop over spotify playlists
         // if that playlist exists in youtube, delete
@@ -95,3 +101,11 @@ fun main() {
         // add songs to it
     }
 }
+
+private fun unifyDictionary(
+    spotifyPlaylists: Either<HttpError, List<Playlist>>,
+    youtubePlaylists: Either<Error, List<Playlist>>,
+    youTubeRestClient: YouTubeRestClient
+): Either<Error, ErrorWrapper<SongDictionary>> = either { spotifyPlaylists.bind() + youtubePlaylists.bind() }
+    .flatMap { it.createDictionary() }
+    .map { it.fillDictionary(Service.SPOTIFY, youTubeRestClient) }

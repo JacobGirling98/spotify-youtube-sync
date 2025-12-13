@@ -23,6 +23,10 @@ class FakeMusicService(
         )
     })
 
+    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> = Either.Right(playlists.map { (name, _) ->
+        PlaylistMetadata(Id(name.value), name)
+    })
+
     override fun search(song: Song): Either<Error, SongDictionary> = dictionaries
         .firstOrNull { it.entries.keys.first() == song }
         ?.let { Either.Right(it) } ?: Either.Left(NoResultsError(song))
