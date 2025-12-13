@@ -15,6 +15,7 @@ class FakeMusicService(
 
     override fun playlists(): Either<Error, List<Playlist>> = Either.Right(playlists.map { (name, songs) ->
         Playlist(
+            Id(name.value),
             name,
             SongDictionary(songs.map { (song, id) ->
                 song to ServiceIds(service to id)

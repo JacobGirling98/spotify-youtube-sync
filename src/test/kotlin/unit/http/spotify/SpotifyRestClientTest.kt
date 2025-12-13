@@ -204,6 +204,7 @@ class SpotifyRestClientTest {
 
         playlists shouldBeRight listOf(
             Playlist(
+                Id(playlistId),
                 Name("playlist-name"),
                 SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(SPOTIFY to Id(songId))),
             )

@@ -38,6 +38,7 @@ class YouTubeRestClient(
     override fun playlists(): Either<Error, List<Playlist>> = either {
         youtubePlaylists().bind().map { playlist ->
             Playlist(
+                playlist.id,
                 playlist.snippet.title,
                 items(playlist.id).bind()
             )

@@ -28,7 +28,7 @@ class DictionaryTest {
 
     @Test
     fun `can create a dictionary from a single playlist`() {
-        val playlists = listOf(playlist("My playlist", songDictionary(song, spotifyServiceId)))
+        val playlists = listOf(playlist(id = Id("My playlist"), name = "My playlist", songDictionary(song, spotifyServiceId)))
 
         val dictionary = playlists.createDictionary()
 
@@ -38,9 +38,9 @@ class DictionaryTest {
     @Test
     fun `can create a dictionary from multiple playlists with duplicate songs`() {
         val playlists = listOf(
-            playlist("My playlist", songDictionary(song, spotifyServiceId)),
-            playlist("My second playlist", songDictionary(otherSong, otherServiceId)),
-            playlist("My youtube playlist", songDictionary(song, youtubeServiceId)),
+            playlist(id = Id("My playlist"), name = "My playlist", songDictionary(song, spotifyServiceId)),
+            playlist(id = Id("My second playlist"), name = "My second playlist", songDictionary(otherSong, otherServiceId)),
+            playlist(id = Id("My youtube playlist"), name = "My youtube playlist", songDictionary(song, youtubeServiceId)),
         )
 
         val dictionary = playlists.createDictionary()

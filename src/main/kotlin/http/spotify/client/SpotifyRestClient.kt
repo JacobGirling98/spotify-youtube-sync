@@ -35,6 +35,7 @@ class SpotifyRestClient(
     override fun playlists(): Either<HttpError, List<org.example.domain.model.Playlist>> = either {
         spotifyPlaylists().bind().map { playlist ->
             Playlist(
+                playlist.id,
                 playlist.name,
                 tracks(playlist.id).bind()
             )

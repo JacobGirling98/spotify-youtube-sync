@@ -209,6 +209,7 @@ class YouTubeRestClientTest {
 
         playlists shouldBeRight listOf(
             Playlist(
+                Id(playlistId),
                 Name("playlist-name"),
                 SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(YOUTUBE_MUSIC to Id(songId))),
             )
