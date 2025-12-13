@@ -1,10 +1,12 @@
 package unit.domain.music
 
+import arrow.core.left
 import fixtures.data.artist
 import fixtures.data.serviceIds
 import fixtures.data.song
-import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import org.example.domain.error.JsonError
+import org.example.domain.error.NotFoundError
 import org.example.domain.model.Id
 import org.example.domain.model.Service
 import org.example.domain.model.SongDictionary
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.nio.file.Files
 import java.util.UUID
+import arrow.core.right
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 class FileSystemSongDictionaryRepositoryTest {
 
@@ -33,7 +37,7 @@ class FileSystemSongDictionaryRepositoryTest {
     }
 
     @Test
-    fun `should return an empty dictionary when the file does not exist`() {
+    fun `should return not found error when the file does not exist`() {
         // Arrange
         tempFile.delete() // Ensure it doesn't exist for this specific test
 
@@ -41,7 +45,7 @@ class FileSystemSongDictionaryRepositoryTest {
         val result = repository.load()
 
         // Assert
-        result.entries.shouldBeEmpty()
+        result shouldBe NotFoundError.left()
     }
 
     @Test
@@ -57,16 +61,17 @@ class FileSystemSongDictionaryRepositoryTest {
         repository.save(dictionary)
 
         val result = repository.load()
-        result shouldBe dictionary
+        result shouldBe dictionary.right()
     }
 
     @Test
-    fun `should return an empty dictionary when the file is corrupt`() {
+    fun `should return a json error when the file is corrupt`() {
         tempFile.writeText("this is not valid json")
 
         val result = repository.load()
 
-        result.entries.shouldBeEmpty()
+        result.isLeft() shouldBe true
+        result.leftOrNull().shouldBeInstanceOf<JsonError>()
     }
 
     @Test
@@ -79,6 +84,6 @@ class FileSystemSongDictionaryRepositoryTest {
 
         val result = repository.load()
 
-        result shouldBe newDictionary
+        result shouldBe newDictionary.right()
     }
 }

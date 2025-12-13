@@ -19,4 +19,6 @@ data object AuthCodeNotSet : GetTokenError("Auth code has not been set")
 
 data class NoResultsError(val song: Song) : HttpError("No search results for song: ${song.name.value}")
 
+data object NotFoundError : Error("Not found")
+
 data class MergeError(override val message: String) : Error(message)

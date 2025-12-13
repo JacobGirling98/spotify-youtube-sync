@@ -1,6 +1,12 @@
 package org.example.domain.music
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import org.example.config.CustomJackson
+import org.example.domain.error.Error
+import org.example.domain.error.JsonError
+import org.example.domain.error.NotFoundError
 import org.example.domain.model.ServiceIds
 import org.example.domain.model.Song
 import org.example.domain.model.SongDictionary
@@ -12,8 +18,8 @@ class FileSystemSongDictionaryRepository(
 
     private data class SongDictionaryEntry(val song: Song, val ids: ServiceIds)
 
-    override fun load(): SongDictionary {
-        if (!file.exists()) return SongDictionary.empty()
+    override fun load(): Either<Error, SongDictionary> {
+        if (!file.exists()) return NotFoundError.left()
 
         return try {
             val fileContent = file.readText()
@@ -21,9 +27,9 @@ class FileSystemSongDictionaryRepository(
                 fileContent,
                 object : com.fasterxml.jackson.core.type.TypeReference<List<SongDictionaryEntry>>() {})
             val entries: Map<Song, ServiceIds> = entryList.associate { it.song to it.ids }
-            SongDictionary(entries)
-        } catch (_: Exception) {
-            SongDictionary.empty()
+            SongDictionary(entries).right()
+        } catch (e: Exception) {
+            JsonError(e.message).left()
         }
     }
 
