@@ -6,9 +6,11 @@ import org.example.domain.error.MergeError
 import org.example.util.combine
 
 data class SongDictionary(
-    val entries: Map<Song, ServiceIds>
+    val entries: Map<Song, ServiceIds> = emptyMap()
 ) {
-    constructor(vararg pairs: Pair<Song, ServiceIds>) : this(mapOf(*pairs))
+    constructor(vararg pairs: Pair<Song, ServiceIds>) : this(
+        if (pairs.isEmpty()) emptyMap() else mapOf(*pairs)
+    )
 
     fun mergeWith(other: SongDictionary): Either<MergeError, SongDictionary> = either {
         SongDictionary(entries.combine(other.entries) { song, first, second ->
@@ -18,6 +20,6 @@ data class SongDictionary(
     }
 
     companion object {
-        fun empty() = SongDictionary()
+        fun empty() = SongDictionary(emptyMap())
     }
 }

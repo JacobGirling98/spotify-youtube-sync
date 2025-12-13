@@ -91,9 +91,19 @@ fun main() {
         val spotifyPlaylists = spotifyClient.playlists()
         val youtubePlaylists = youTubeRestClient.playlists()
 
-        val songDictionary = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient)
+        val unifyResult = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient)
 
-
+//        unifyResult.fold(
+//            { error -> println("Error unifying dictionary: ${error.message}") },
+//            { errorWrapper ->
+//                val songDictionary = errorWrapper.value
+//                val repository = DefaultSongDictionaryRepository()
+//                repository.save(songDictionary).fold(
+//                    { error -> println("Error saving song dictionary: ${error.message}") },
+//                    { println("Song dictionary saved successfully.") }
+//                )
+//            }
+//        )
 
         // loop over spotify playlists
         // if that playlist exists in youtube, delete

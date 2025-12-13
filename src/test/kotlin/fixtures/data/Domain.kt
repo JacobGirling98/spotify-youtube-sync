@@ -13,5 +13,5 @@ fun youtubeServiceId(id: Id = Id("123")) = serviceIds(YOUTUBE_MUSIC, id)
 fun songDictionary(song: Song = song(), serviceIds: ServiceIds = serviceIds()) =
     SongDictionary(song to serviceIds)
 
-fun playlist(id: Id = Id("playlist-id"), name: String = "David Brent's Playlist", songDictionary: SongDictionary = songDictionary()) =
+fun playlist(id: Id = Id("playlist-id"), name: String = "David Brent's Playlist", songDictionary: SongDictionary = SongDictionary.empty()) =
     Playlist(id, Name(name), songDictionary)
