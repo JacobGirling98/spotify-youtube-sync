@@ -39,17 +39,22 @@ class YouTubeRestClient(
 
     override val service: Service = Service.YOUTUBE_MUSIC
 
-    override fun playlists(): Either<Error, List<Playlist>> = either {
-        youtubePlaylists().bind().map { playlist ->
+    override fun playlists(): Either<HttpError, List<Playlist>> = either {
+        val metadata: List<PlaylistMetadata> = playlistMetadata().bind()
+        playlists(metadata).bind()
+    }
+
+    override fun playlists(metadata: List<PlaylistMetadata>): Either<HttpError, List<Playlist>> = either {
+        metadata.map { playlist ->
             Playlist(
                 playlist.id,
-                playlist.snippet.title,
+                playlist.name,
                 items(playlist.id).bind()
             )
         }
     }
 
-    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> = either {
+    override fun playlistMetadata(): Either<HttpError, List<PlaylistMetadata>> = either {
         youtubePlaylists().bind().map { youtubePlaylist ->
             PlaylistMetadata(youtubePlaylist.id, youtubePlaylist.snippet.title)
         }

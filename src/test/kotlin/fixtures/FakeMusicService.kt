@@ -23,6 +23,11 @@ class FakeMusicService(
         )
     })
 
+    override fun playlists(metadata: List<PlaylistMetadata>): Either<Error, List<Playlist>> =
+        Either.Right(metadata.map { playlistMetadata ->
+            Playlist(playlistMetadata.id, playlistMetadata.name, SongDictionary.empty())
+        })
+
     override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> = Either.Right(playlists.map { (name, _) ->
         PlaylistMetadata(Id(name.value), name)
     })

@@ -402,4 +402,25 @@ class YouTubeRestClientTest {
 
         playlists shouldBeRight listOf(PlaylistMetadata(Id("playlist-id"), Name("playlist-name")))
     }
+
+    @Test
+    fun `can get playlists from metadata`() {
+        // Arrange
+        val metadata = listOf(PlaylistMetadata(Id("playlist-id-1"), Name("Playlist One")))
+        val http: HttpHandler = { request ->
+            when {
+                request.uri.toString().contains("playlistItems") -> Response(OK).body(youTubePlaylistItems(song, artist, songId))
+                request.uri.toString().contains("playlists") -> Response(OK).body(youTubeCurrentUserPlaylists("playlist-id-1", "Playlist One"))
+                else -> fail("Unknown URL hit")
+            }
+        }
+
+        val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
+
+        // Act
+        val playlists = client.playlists(metadata)
+
+        // Assert
+        playlists shouldBeRight listOf(Playlist(Id("playlist-id-1"), Name("Playlist One"), SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(YOUTUBE_MUSIC to Id(songId)))))
+    }
 }

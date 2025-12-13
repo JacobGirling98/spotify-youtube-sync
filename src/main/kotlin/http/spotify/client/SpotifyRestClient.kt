@@ -9,7 +9,6 @@ import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
 import org.example.domain.model.*
-import org.example.domain.model.PlaylistMetadata
 import org.example.domain.music.MusicService
 import org.example.http.auth.TokenManager
 import org.example.http.spotify.model.Page
@@ -34,16 +33,22 @@ class SpotifyRestClient(
     override val service: Service = Service.SPOTIFY
 
     override fun playlists(): Either<HttpError, List<org.example.domain.model.Playlist>> = either {
-        spotifyPlaylists().bind().map { playlist ->
-            Playlist(
-                playlist.id,
-                playlist.name,
-                tracks(playlist.id).bind()
-            )
-        }
+        val metadata: List<PlaylistMetadata> = playlistMetadata().bind()
+        playlists(metadata).bind()
     }
 
-    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> = either {
+    override fun playlists(metadata: List<PlaylistMetadata>): Either<HttpError, List<org.example.domain.model.Playlist>> =
+        either {
+            metadata.map { playlist ->
+                Playlist(
+                    playlist.id,
+                    playlist.name,
+                    tracks(playlist.id).bind()
+                )
+            }
+        }
+
+    override fun playlistMetadata(): Either<HttpError, List<PlaylistMetadata>> = either {
         spotifyPlaylists().bind().map { spotifyPlaylist ->
             PlaylistMetadata(spotifyPlaylist.id, spotifyPlaylist.name)
         }

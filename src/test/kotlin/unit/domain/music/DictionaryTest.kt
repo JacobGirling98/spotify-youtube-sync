@@ -179,6 +179,11 @@ private class FakeYouTubeMusic private constructor(
         TODO("Not needed")
     }
 
+    override fun playlists(metadata: List<PlaylistMetadata>): Either<Error, List<Playlist>> =
+        Either.Right(metadata.map { playlistMetadata ->
+            Playlist(playlistMetadata.id, playlistMetadata.name, SongDictionary.empty())
+        })
+
     override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> {
         TODO("Not needed for these tests")
     }

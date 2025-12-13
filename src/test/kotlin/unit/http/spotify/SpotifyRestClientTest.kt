@@ -232,4 +232,25 @@ class SpotifyRestClientTest {
 
         playlists shouldBeRight listOf(PlaylistMetadata(Id("playlist-id"), Name("playlist-name")))
     }
+
+    @Test
+    fun `can get playlists from metadata`() {
+        // Arrange
+        val metadata = listOf(PlaylistMetadata(Id("playlist-id-1"), Name("Playlist One")))
+        val http: HttpHandler = { request ->
+            when {
+                request.uri.toString().contains("tracks") -> Response(OK).body(spotifyPlaylistItems(song, artist, songId))
+                request.uri.toString().contains("me") -> Response(OK).body(spotifyCurrentUserPlaylists("playlist-id-1", "Playlist One"))
+                else -> fail("Unknown URL hit")
+            }
+        }
+
+        val client = SpotifyRestClient(http, TestTokenManager(), "spotify")
+
+        // Act
+        val playlists = client.playlists(metadata)
+
+        // Assert
+        playlists shouldBeRight listOf(Playlist(Id("playlist-id-1"), Name("Playlist One"), SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(SPOTIFY to Id(songId)))))
+    }
 }

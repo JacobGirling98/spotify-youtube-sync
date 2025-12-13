@@ -13,6 +13,7 @@ interface MusicService {
     val service: Service
 
     fun playlists(): Either<Error, List<Playlist>>
+    fun playlists(metadata: List<PlaylistMetadata>): Either<Error, List<Playlist>>
     fun playlistMetadata(): Either<Error, List<PlaylistMetadata>>
     fun search(song: Song): Either<Error, SongDictionary>
     fun deletePlaylist(id: Id): Either<Error, Unit>
