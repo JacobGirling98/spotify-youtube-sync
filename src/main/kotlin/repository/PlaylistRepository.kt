@@ -1,17 +1,12 @@
 package org.example.repository
 
-import org.example.config.bodyLens
+import com.fasterxml.jackson.module.kotlin.readValue
+import org.example.config.CustomJackson
 import org.example.domain.model.Playlist
-import org.http4k.core.Method
-import org.http4k.core.Request
 import java.io.File
 
-fun playlistRepository(): JsonFileRepository<List<Playlist>> {
-    val playlistFile = File("data/playlists.json")
-    val playlistLens = bodyLens<List<Playlist>>()
-    return JsonFileRepository(
-        file = playlistFile,
-        serializer = { playlists -> playlistLens.inject(playlists, Request.Companion(Method.GET, "/")).bodyString() },
-        deserializer = { jsonString -> playlistLens.extract(Request.Companion(Method.GET, "/").body(jsonString)) }
-    )
-}
+fun playlistRepository(file: File? = null): JsonFileRepository<List<Playlist>> = JsonFileRepository(
+    file = file ?: File("data/playlists.json"),
+    serializer = { playlists -> CustomJackson.mapper.writeValueAsString(playlists) },
+    deserializer = { jsonString -> CustomJackson.mapper.readValue(jsonString) }
+)
