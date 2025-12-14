@@ -19,6 +19,9 @@ import org.example.http.server.routes
 import org.example.http.spotify.client.SpotifyRestClient
 import org.example.http.util.retry
 import org.example.http.youtube.client.YouTubeRestClient
+import org.example.repository.Repository
+import org.example.repository.playlistRepository
+import org.example.repository.songDictionaryRepository
 import org.http4k.client.ApacheClient
 import org.http4k.server.Undertow
 import org.http4k.server.asServer
@@ -84,8 +87,8 @@ fun main() {
         YouTubeRestClient(retry(client), youTubeTokenManager, "https://www.googleapis.com/youtube/v3")
 
     // Instantiate repositories
-    val songDictionaryRepository = DefaultSongDictionaryRepository()
-    val playlistRepository = DefaultPlaylistRepository() // New repository instantiation
+    val songDictionaryRepository = songDictionaryRepository()
+    val playlistRepository = playlistRepository()
 
     println(youtubeConfig.codeUri(environment.youtubeClientId))
 
@@ -105,8 +108,8 @@ private fun unifyDictionary(
 private fun sync(
     spotifyClient: SpotifyRestClient,
     youTubeRestClient: YouTubeRestClient,
-    songDictionaryRepository: DefaultSongDictionaryRepository,
-    playlistRepository: DefaultPlaylistRepository
+    songDictionaryRepository: Repository<SongDictionary>,
+    playlistRepository: Repository<List<Playlist>>
 ) {
     Thread.sleep(Duration.ofSeconds(20))
 
@@ -137,3 +140,4 @@ private fun sync(
     // create new playlist on youtube
     // add songs to it
 }
+

@@ -1,4 +1,4 @@
-package org.example.domain.music
+package org.example.repository
 
 import arrow.core.Either
 import arrow.core.left
@@ -6,7 +6,6 @@ import arrow.core.right
 import org.example.domain.error.Error
 import org.example.domain.error.JsonError
 import org.example.domain.error.NotFoundError
-import org.example.repository.Repository
 import java.io.File
 
 class JsonFileRepository<T>(

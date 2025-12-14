@@ -2,19 +2,18 @@ package unit.domain.music
 
 import arrow.core.left
 import arrow.core.right
-import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.example.config.CustomJackson
 import org.example.domain.error.JsonError
 import org.example.domain.error.NotFoundError
-import org.example.domain.music.JsonFileRepository
+import org.example.repository.JsonFileRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.nio.file.Files
-import java.util.UUID
+import java.util.*
 
 class JsonFileRepositoryTest {
 
