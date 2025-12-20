@@ -28,6 +28,10 @@ dependencies {
     testImplementation("io.kotest.extensions:kotest-assertions-arrow:2.0.0")
 
     testImplementation("org.http4k:http4k-testing-kotest")
+
+    implementation("io.opentelemetry:opentelemetry-api:1.45.0")
+    implementation("io.opentelemetry:opentelemetry-sdk:1.45.0")
+    implementation("io.opentelemetry:opentelemetry-sdk-testing:1.45.0")
 }
 
 tasks.withType<Test>().configureEach {
