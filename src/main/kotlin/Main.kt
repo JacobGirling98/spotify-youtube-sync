@@ -25,6 +25,7 @@ import org.example.repository.songDictionaryRepository
 import org.http4k.client.ApacheClient
 import org.http4k.server.Undertow
 import org.http4k.server.asServer
+import java.io.File
 import java.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -88,17 +89,20 @@ fun main() {
 
     // Instantiate repositories
     val songDictionaryRepository = songDictionaryRepository()
-    val playlistRepository = playlistRepository()
-
-    println(youtubeConfig.codeUri(environment.youtubeClientId))
+    val spotifyPlaylistRepository = playlistRepository(File("data/spotify-playlists.json"))
+    val youtubePlaylistRepository = playlistRepository(File("data/youtube-playlists.json"))
 
     while (true) {
-        sync(spotifyClient, youTubeRestClient, songDictionaryRepository, playlistRepository) // Call sync function
+        println(spotifyConfig.codeUri(environment.spotifyClientId))
+        println(youtubeConfig.codeUri(environment.youtubeClientId))
+
+        Thread.sleep(Duration.ofSeconds(20))
+        sync(spotifyClient, youTubeRestClient, songDictionaryRepository, spotifyPlaylistRepository, youtubePlaylistRepository)
     }
 }
 
 private fun unifyDictionary(
-    spotifyPlaylists: Either<HttpError, List<Playlist>>,
+    spotifyPlaylists: Either<Error, List<Playlist>>,
     youtubePlaylists: Either<Error, List<Playlist>>,
     youTubeRestClient: YouTubeRestClient
 ): Either<Error, ErrorWrapper<SongDictionary>> = either { spotifyPlaylists.bind() + youtubePlaylists.bind() }
@@ -109,14 +113,30 @@ private fun sync(
     spotifyClient: SpotifyRestClient,
     youTubeRestClient: YouTubeRestClient,
     songDictionaryRepository: Repository<SongDictionary>,
-    playlistRepository: Repository<List<Playlist>>
+    spotifyPlaylistRepository: Repository<List<Playlist>>,
+    youtubePlaylistRepository: Repository<List<Playlist>>
 ) {
-    Thread.sleep(Duration.ofSeconds(20))
+    println("Fetching spotify playlists")
 
     val spotifyPlaylists = spotifyClient.playlists()
+//    val spotifyPlaylists = spotifyPlaylistRepository.load()
+    println("Fetching youtube playlists")
     val youtubePlaylists = youTubeRestClient.playlists()
 
+    spotifyPlaylists.fold(
+        { error -> println("Error: $error") },
+        { playlists -> spotifyPlaylistRepository.save(playlists) }
+    )
+    youtubePlaylists.fold(
+        { error -> println("Error: $error") },
+        { playlists -> youtubePlaylistRepository.save(playlists) }
+    )
+
+    println("Saved to playlist repositories")
+
     val unifyResult = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient)
+
+    println("Dictionaries are combined")
 
     unifyResult.fold(
         { error -> println("Error unifying dictionary: ${error.message}") },
@@ -128,7 +148,7 @@ private fun sync(
             )
 
             val allPlaylists = spotifyPlaylists.getOrElse { emptyList() } + youtubePlaylists.getOrElse { emptyList() }
-            playlistRepository.save(allPlaylists).fold(
+            spotifyPlaylistRepository.save(allPlaylists).fold(
                 { error -> println("Error saving playlists: ${error.message}") },
                 { println("Playlists saved successfully.") }
             )
