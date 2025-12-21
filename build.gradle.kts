@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
+    implementation("ch.qos.logback:logback-classic:1.5.16")
 
     implementation(platform("org.http4k:http4k-bom:6.9.0.0"))
     implementation("org.http4k:http4k-core")

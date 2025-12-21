@@ -19,6 +19,7 @@ import org.example.http.server.routes
 import org.example.http.spotify.client.SpotifyRestClient
 import org.example.http.util.retry
 import org.example.http.youtube.client.YouTubeRestClient
+import org.example.log.KotlinLoggingLogger
 import org.example.repository.Repository
 import org.example.repository.playlistRepository
 import org.example.repository.songDictionaryRepository
@@ -27,10 +28,13 @@ import org.http4k.server.Undertow
 import org.http4k.server.asServer
 import java.io.File
 import java.time.Duration
+import kotlin.math.log
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 fun main() {
+    val logger = KotlinLoggingLogger("app")
+
     val environment = loadEnvironmentVariables().getOrElse { error(it.message) }
     val serverUri = "http://127.0.0.1:8000"
 
@@ -93,8 +97,8 @@ fun main() {
     val youtubePlaylistRepository = playlistRepository(File("data/youtube-playlists.json"))
 
     while (true) {
-        println(spotifyConfig.codeUri(environment.spotifyClientId))
-        println(youtubeConfig.codeUri(environment.youtubeClientId))
+        logger.info(spotifyConfig.codeUri(environment.spotifyClientId))
+        logger.info(youtubeConfig.codeUri(environment.youtubeClientId))
 
         Thread.sleep(Duration.ofSeconds(20))
         sync(spotifyClient, youTubeRestClient, songDictionaryRepository, spotifyPlaylistRepository, youtubePlaylistRepository)
