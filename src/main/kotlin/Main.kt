@@ -6,7 +6,6 @@ import arrow.core.getOrElse
 import arrow.core.raise.either
 import org.example.config.loadEnvironmentVariables
 import org.example.domain.error.Error
-import org.example.domain.error.HttpError
 import org.example.domain.model.ErrorWrapper
 import org.example.domain.model.Playlist
 import org.example.domain.model.Service
@@ -20,6 +19,7 @@ import org.example.http.spotify.client.SpotifyRestClient
 import org.example.http.util.retry
 import org.example.http.youtube.client.YouTubeRestClient
 import org.example.log.KotlinLoggingLogger
+import org.example.log.Log
 import org.example.repository.Repository
 import org.example.repository.playlistRepository
 import org.example.repository.songDictionaryRepository
@@ -28,12 +28,11 @@ import org.http4k.server.Undertow
 import org.http4k.server.asServer
 import java.io.File
 import java.time.Duration
-import kotlin.math.log
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 fun main() {
-    val logger = KotlinLoggingLogger("app")
+    val log = KotlinLoggingLogger("app")
 
     val environment = loadEnvironmentVariables().getOrElse { error(it.message) }
     val serverUri = "http://127.0.0.1:8000"
@@ -97,18 +96,26 @@ fun main() {
     val youtubePlaylistRepository = playlistRepository(File("data/youtube-playlists.json"))
 
     while (true) {
-        logger.info(spotifyConfig.codeUri(environment.spotifyClientId))
-        logger.info(youtubeConfig.codeUri(environment.youtubeClientId))
+        log.info(spotifyConfig.codeUri(environment.spotifyClientId))
+        log.info(youtubeConfig.codeUri(environment.youtubeClientId))
 
         Thread.sleep(Duration.ofSeconds(20))
-        sync(spotifyClient, youTubeRestClient, songDictionaryRepository, spotifyPlaylistRepository, youtubePlaylistRepository)
+        sync(
+            spotifyClient,
+            youTubeRestClient,
+            songDictionaryRepository,
+            spotifyPlaylistRepository,
+            youtubePlaylistRepository,
+            log
+        )
     }
 }
 
 private fun unifyDictionary(
     spotifyPlaylists: Either<Error, List<Playlist>>,
     youtubePlaylists: Either<Error, List<Playlist>>,
-    youTubeRestClient: YouTubeRestClient
+    youTubeRestClient: YouTubeRestClient,
+    log: Log
 ): Either<Error, ErrorWrapper<SongDictionary>> = either { spotifyPlaylists.bind() + youtubePlaylists.bind() }
     .flatMap { it.createDictionary() }
     .map { it.fillDictionary(Service.SPOTIFY, youTubeRestClient) }
@@ -118,10 +125,9 @@ private fun sync(
     youTubeRestClient: YouTubeRestClient,
     songDictionaryRepository: Repository<SongDictionary>,
     spotifyPlaylistRepository: Repository<List<Playlist>>,
-    youtubePlaylistRepository: Repository<List<Playlist>>
+    youtubePlaylistRepository: Repository<List<Playlist>>,
+    log: Log
 ) {
-    println("Fetching spotify playlists")
-
     val spotifyPlaylists = spotifyClient.playlists()
 //    val spotifyPlaylists = spotifyPlaylistRepository.load()
     println("Fetching youtube playlists")
@@ -138,7 +144,7 @@ private fun sync(
 
     println("Saved to playlist repositories")
 
-    val unifyResult = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient)
+    val unifyResult = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient, log)
 
     println("Dictionaries are combined")
 
