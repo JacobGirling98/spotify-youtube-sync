@@ -20,9 +20,9 @@ fun propsFromClasspath(file: String): Either<ConfigError, java.util.Properties> 
     props
 }
 
-fun loadProperties(readProps: () -> Either<ConfigError, java.util.Properties>): Either<ConfigError, Properties> =
+fun loadProperties(readProps: (String) -> Either<ConfigError, java.util.Properties> = ::propsFromClasspath): Either<ConfigError, Properties> =
     either {
-        val props = readProps().bind()
+        val props = readProps("/config.properties").bind()
         val playlists = props.getProperty(Playlists.name)?.split(",")
             ?: raise(ConfigError.PlaylistsNotSet)
         Properties(playlists)

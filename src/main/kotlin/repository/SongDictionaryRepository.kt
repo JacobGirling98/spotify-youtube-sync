@@ -7,8 +7,8 @@ import java.io.File
 
 fun songDictionaryRepository(file: File? = null): JsonFileRepository<SongDictionary> = JsonFileRepository(
     file = file ?: File("data/songDictionary.json"),
-    serializer = { songDictionary ->
-        CustomJackson.mapper.writeValueAsString(songDictionary)
+    serializer = { songDictionaries ->
+        CustomJackson.mapper.writeValueAsString(songDictionaries)
     },
     deserializer = { jsonString -> CustomJackson.mapper.readValue(jsonString) }
 )

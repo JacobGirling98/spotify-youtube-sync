@@ -19,14 +19,14 @@ class PropertiesTest {
 
     @Test
     fun `returns an error when properties file is not found`() {
-        val readFailure = { Left(ConfigError.ConfigFileNotFound) }
+        val readFailure = { _: String -> Left(ConfigError.ConfigFileNotFound) }
 
         loadProperties(readFailure) shouldBeLeft ConfigError.ConfigFileNotFound
     }
 
     @Test
     fun `returns properties with a single playlist`() {
-        val read = {
+        val read = { _: String ->
             props.apply {
                 setProperty("PLAYLISTS", "MyPlaylist")
             }
@@ -38,7 +38,7 @@ class PropertiesTest {
 
     @Test
     fun `returns properties with multiple playlists`() {
-        val read = {
+        val read = { _: String ->
             props.apply {
                 setProperty("PLAYLISTS", "MyPlaylist,AnotherPlaylist,ThirdPlaylist")
             }
@@ -56,7 +56,7 @@ class PropertiesTest {
 
     @Test
     fun `returns error if playlists is not set`() {
-        val read = { Right(props) }
+        val read = { _: String -> Right(props) }
 
         loadProperties(read) shouldBeLeft ConfigError.PlaylistsNotSet
     }
