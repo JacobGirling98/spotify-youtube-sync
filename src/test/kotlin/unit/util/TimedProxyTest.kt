@@ -30,17 +30,17 @@ class TimedProxyTest {
         val sum = proxyCalculator.add(5, 3)
         sum shouldBe 8
 
-        fakeLog.messages shouldContain "INFO: starting add"
-        val finishedLog = fakeLog.messages.find { it.startsWith("INFO: finished add") }
+        fakeLog.messages shouldContain "INFO: starting RealCalculator.add(5, 3)"
+        val finishedLog = fakeLog.messages.find { it.startsWith("INFO: finished RealCalculator.add(5, 3)") }
         finishedLog shouldNotBe null
-        finishedLog shouldStartWith "INFO: finished add in"
+        finishedLog shouldStartWith "INFO: finished RealCalculator.add(5, 3) in"
         
         val difference = proxyCalculator.subtract(10, 4)
         difference shouldBe 6
 
-        fakeLog.messages shouldContain "INFO: starting subtract"
-        val finishedSubtractLog = fakeLog.messages.find { it.startsWith("INFO: finished subtract") }
+        fakeLog.messages shouldContain "INFO: starting RealCalculator.subtract(10, 4)"
+        val finishedSubtractLog = fakeLog.messages.find { it.startsWith("INFO: finished RealCalculator.subtract(10, 4)") }
         finishedSubtractLog shouldNotBe null
-        finishedSubtractLog shouldStartWith "INFO: finished subtract in"
+        finishedSubtractLog shouldStartWith "INFO: finished RealCalculator.subtract(10, 4) in"
     }
 }

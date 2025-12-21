@@ -72,7 +72,7 @@ class SpotifyRestClient(
     fun spotifyPlaylists(): Either<HttpError, List<Playlist>> =
         recursivePagination("$baseUrl/me/playlists", playlistLens)
 
-    fun tracks(playlistId: Id): Either<HttpError, SongDictionary> = either {
+    override fun tracks(playlistId: Id): Either<HttpError, SongDictionary> = either {
         val playlistItems = recursivePagination("$baseUrl/playlists/${playlistId.value}/tracks", trackLens).bind()
         val tracks = playlistItems.mapNotNull { it.track }
         SongDictionary(tracks.associate { track ->

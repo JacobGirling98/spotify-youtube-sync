@@ -10,6 +10,7 @@ import org.example.domain.model.ErrorWrapper
 import org.example.domain.model.Playlist
 import org.example.domain.model.Service
 import org.example.domain.model.SongDictionary
+import org.example.domain.music.MusicService
 import org.example.domain.music.createDictionary
 import org.example.domain.music.fillDictionary
 import org.example.http.auth.*
@@ -23,6 +24,7 @@ import org.example.log.Log
 import org.example.repository.Repository
 import org.example.repository.playlistRepository
 import org.example.repository.songDictionaryRepository
+import org.example.util.TimedProxy
 import org.http4k.client.ApacheClient
 import org.http4k.server.Undertow
 import org.http4k.server.asServer
@@ -86,9 +88,16 @@ fun main() {
         redirectHandler { youTubeTokenManager.updateAuthCode(it) }
     ).asServer(Undertow(8000)).start()
 
-    val spotifyClient = SpotifyRestClient(retry(client), spotifyTokenManager, "https://api.spotify.com/v1")
+    val spotifyClient =
+        TimedProxy.create<MusicService>(SpotifyRestClient(retry(client), spotifyTokenManager, "https://api.spotify.com/v1"), log)
     val youTubeRestClient =
-        YouTubeRestClient(retry(client), youTubeTokenManager, "https://www.googleapis.com/youtube/v3")
+        TimedProxy.create<MusicService>(
+            YouTubeRestClient(
+                retry(client),
+                youTubeTokenManager,
+                "https://www.googleapis.com/youtube/v3"
+            ), log
+        )
 
     // Instantiate repositories
     val songDictionaryRepository = songDictionaryRepository()
@@ -114,53 +123,48 @@ fun main() {
 private fun unifyDictionary(
     spotifyPlaylists: Either<Error, List<Playlist>>,
     youtubePlaylists: Either<Error, List<Playlist>>,
-    youTubeRestClient: YouTubeRestClient,
+    youTubeRestClient: MusicService,
     log: Log
 ): Either<Error, ErrorWrapper<SongDictionary>> = either { spotifyPlaylists.bind() + youtubePlaylists.bind() }
     .flatMap { it.createDictionary() }
     .map { it.fillDictionary(Service.SPOTIFY, youTubeRestClient) }
 
 private fun sync(
-    spotifyClient: SpotifyRestClient,
-    youTubeRestClient: YouTubeRestClient,
+    spotifyClient: MusicService,
+    youTubeRestClient: MusicService,
     songDictionaryRepository: Repository<SongDictionary>,
     spotifyPlaylistRepository: Repository<List<Playlist>>,
     youtubePlaylistRepository: Repository<List<Playlist>>,
     log: Log
 ) {
-    val spotifyPlaylists = spotifyClient.playlists()
-//    val spotifyPlaylists = spotifyPlaylistRepository.load()
-    println("Fetching youtube playlists")
-    val youtubePlaylists = youTubeRestClient.playlists()
+//    val spotifyPlaylists = spotifyClient.playlists()
+//    val youtubePlaylists = youTubeRestClient.playlists()
+
+    val spotifyPlaylists = spotifyPlaylistRepository.load()
+    val youtubePlaylists = youtubePlaylistRepository.load()
 
     spotifyPlaylists.fold(
-        { error -> println("Error: $error") },
+        { error -> log.error("$error") },
         { playlists -> spotifyPlaylistRepository.save(playlists) }
     )
     youtubePlaylists.fold(
-        { error -> println("Error: $error") },
+        { error -> log.error("$error") },
         { playlists -> youtubePlaylistRepository.save(playlists) }
     )
 
-    println("Saved to playlist repositories")
+    log.info("Saved to playlist repositories")
 
     val unifyResult = unifyDictionary(spotifyPlaylists, youtubePlaylists, youTubeRestClient, log)
 
-    println("Dictionaries are combined")
+    log.info("Dictionaries are combined")
 
     unifyResult.fold(
-        { error -> println("Error unifying dictionary: ${error.message}") },
+        { error -> log.error("Error unifying dictionary: ${error.message}") },
         { errorWrapper ->
             val songDictionary = errorWrapper.value
             songDictionaryRepository.save(songDictionary).fold(
-                { error -> println("Error saving song dictionary: ${error.message}") },
-                { println("Song dictionary saved successfully.") }
-            )
-
-            val allPlaylists = spotifyPlaylists.getOrElse { emptyList() } + youtubePlaylists.getOrElse { emptyList() }
-            spotifyPlaylistRepository.save(allPlaylists).fold(
-                { error -> println("Error saving playlists: ${error.message}") },
-                { println("Playlists saved successfully.") }
+                { error -> log.error("Error saving song dictionary: ${error.message}") },
+                { log.info("Song dictionary saved successfully.") }
             )
         }
     )

@@ -119,7 +119,7 @@ class YouTubeRestClientTest {
 
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
-        val tracks = client.items(Id(playlistId))
+        val tracks = client.tracks(Id(playlistId))
 
         tracks shouldBeRight SongDictionary(
             Song(
@@ -144,7 +144,7 @@ class YouTubeRestClientTest {
         }
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
-        val tracks = client.items(Id(playlistId))
+        val tracks = client.tracks(Id(playlistId))
 
         tracks shouldBeRight SongDictionary(
             Song(Name(song), listOf(Artist(artist))) to ServiceIds(YOUTUBE_MUSIC to Id(songId)),
@@ -161,7 +161,7 @@ class YouTubeRestClientTest {
         }
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
-        val tracks = client.items(Id(playlistId))
+        val tracks = client.tracks(Id(playlistId))
 
         tracks.leftOrNull().shouldBeInstanceOf<JsonError>()
     }
@@ -175,7 +175,7 @@ class YouTubeRestClientTest {
 
         val client = YouTubeRestClient(http, TestTokenManager("my-token"), "youtube")
 
-        client.items(Id(playlistId))
+        client.tracks(Id(playlistId))
     }
 
     @Test
@@ -183,7 +183,7 @@ class YouTubeRestClientTest {
         val http: HttpHandler = { Response(OK).body(youTubePlaylistItems(song, artist, songId)) }
         val client = YouTubeRestClient(http, TestTokenManager(tokenFailure = true), "youtube")
 
-        client.items(Id(playlistId)).leftOrNull().shouldBeInstanceOf<HttpResponseError>()
+        client.tracks(Id(playlistId)).leftOrNull().shouldBeInstanceOf<HttpResponseError>()
     }
 
     @Test
@@ -191,7 +191,7 @@ class YouTubeRestClientTest {
         val http: HttpHandler = { Response(BAD_REQUEST).body("oh dear") }
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
-        client.items(Id(playlistId)) shouldBeLeft HttpResponseError(400, "oh dear")
+        client.tracks(Id(playlistId)) shouldBeLeft HttpResponseError(400, "oh dear")
     }
 
     @Test
@@ -226,7 +226,7 @@ class YouTubeRestClientTest {
 
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
-        val tracks = client.items(Id(playlistId))
+        val tracks = client.tracks(Id(playlistId))
 
         tracks shouldBeRight SongDictionary(
             Song(

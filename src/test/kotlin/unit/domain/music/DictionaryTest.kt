@@ -5,6 +5,7 @@ import fixtures.data.*
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import org.example.domain.error.Error
+import org.example.domain.error.HttpError
 import org.example.domain.error.NoResultsError
 import org.example.domain.model.*
 import org.example.domain.model.Service.SPOTIFY
@@ -204,6 +205,10 @@ private class FakeYouTubeMusic private constructor(
         songId: Id,
         playlistId: Id
     ): Either<Error, Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override fun tracks(playlistId: Id): Either<HttpError, SongDictionary> {
         TODO("Not yet implemented")
     }
 }

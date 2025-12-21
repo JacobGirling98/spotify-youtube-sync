@@ -22,7 +22,10 @@ object TimedProxy {
 
     private class TimedInvocationHandler<T>(private val original: T, private val log: Log) : InvocationHandler {
         override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
-            return time(method.name, log) {
+            val className = (original as Any).javaClass.simpleName
+            val methodName = method.name
+            val arguments = args?.joinToString(", ") ?: ""
+            return time("$className.$methodName($arguments)", log) {
                 try {
                     method.invoke(original, *(args ?: emptyArray()))
                 } catch (e: InvocationTargetException) {

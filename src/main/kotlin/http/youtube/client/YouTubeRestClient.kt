@@ -49,7 +49,7 @@ class YouTubeRestClient(
             Playlist(
                 playlist.id,
                 playlist.name,
-                items(playlist.id).bind()
+                tracks(playlist.id).bind()
             )
         }
     }
@@ -107,7 +107,7 @@ class YouTubeRestClient(
 
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)
 
-    fun items(playlistId: Id): Either<HttpError, SongDictionary> = either {
+    override fun tracks(playlistId: Id): Either<HttpError, SongDictionary> = either {
         val playlistItems = recursivePagination(
             "$baseUrl/playlistItems?part=id,snippet&playlistId=${playlistId.value}",
             null,
