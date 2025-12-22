@@ -8,5 +8,8 @@ sealed class ConfigError(val message: String) {
 
     data object ConfigFileNotFound : ConfigError("Config file not found")
     data object PlaylistsNotSet : ConfigError("Playlists config variable not set")
+    data object RedirectUriNotSet : ConfigError("Redirect URI config variable not set")
+    data object RedirectPortNotSet : ConfigError("Redirect Port config variable not set")
+    data object SpotifyBaseUrlNotSet : ConfigError("Spotify Base URL config variable not set")
+    data object YouTubeBaseUrlNotSet : ConfigError("YouTube Base URL config variable not set")
 }
-
