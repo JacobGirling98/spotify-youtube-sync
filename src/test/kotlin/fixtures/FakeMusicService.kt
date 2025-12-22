@@ -37,9 +37,6 @@ class FakeMusicService(
         .firstOrNull { it.entries.keys.first() == song }
         ?.let { Either.Right(it) } ?: Either.Left(NoResultsError(song))
 
-    override fun deletePlaylist(id: Id): Either<Error, Unit> {
-        TODO("Not yet implemented")
-    }
 
     override fun addSongToPlaylist(
         songId: Id,

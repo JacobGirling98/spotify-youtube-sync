@@ -77,15 +77,6 @@ class YouTubeRestClient(
         SongDictionary(song to ServiceIds(Service.YOUTUBE_MUSIC to firstResult.id.videoId))
     }
 
-    override fun deletePlaylist(id: Id): Either<Error, Unit> = either {
-        val request = Request(Method.DELETE, "$baseUrl/playlists")
-            .bearerAuth(tokenManager.token().bind().value)
-            .query("id", id.value)
-        val response = http(request)
-
-        if (!response.status.successful) raise(HttpResponseError.from(response))
-    }
-
     override fun addSongToPlaylist(
         songId: Id,
         playlistId: Id

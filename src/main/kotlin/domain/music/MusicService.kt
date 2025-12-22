@@ -17,7 +17,6 @@ interface MusicService {
     fun playlists(metadata: List<PlaylistMetadata>): Either<Error, List<Playlist>>
     fun playlistMetadata(): Either<Error, List<PlaylistMetadata>>
     fun search(song: Song): Either<Error, SongDictionary>
-    fun deletePlaylist(id: Id): Either<Error, Unit>
     fun addSongToPlaylist(songId: Id, playlistId: Id): Either<Error, Unit>
     fun tracks(playlistId: Id): Either<HttpError, SongDictionary>
 }

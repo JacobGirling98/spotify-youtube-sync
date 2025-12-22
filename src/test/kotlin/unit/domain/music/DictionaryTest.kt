@@ -197,10 +197,6 @@ private class FakeYouTubeMusic private constructor(
         else Either.Left(NoResultsError(song))
     }
 
-    override fun deletePlaylist(id: Id): Either<Error, Unit> {
-        TODO("Not yet implemented")
-    }
-
     override fun addSongToPlaylist(
         songId: Id,
         playlistId: Id
