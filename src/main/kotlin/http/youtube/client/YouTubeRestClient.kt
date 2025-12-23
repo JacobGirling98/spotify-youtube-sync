@@ -96,6 +96,17 @@ class YouTubeRestClient(
         if (!response.status.successful) raise(HttpResponseError.from(response))
     }
 
+    override fun deleteSongFromPlaylist(songId: Id, playlistId: Id): Either<Error, Unit> = either {
+        val request = Request(Method.DELETE, "$baseUrl/playlistItems")
+            .bearerAuth(tokenManager.token().bind().value)
+            .query("id", songId.value)
+        val response = http(request)
+
+        if (!response.status.successful && response.status != org.http4k.core.Status.NO_CONTENT) {
+            raise(HttpResponseError.from(response))
+        }
+    }
+
     fun youtubePlaylists() = recursivePagination("$baseUrl/playlists?part=id,snippet&mine=true", null, playlistLens)
 
     override fun tracks(playlistId: Id): Either<HttpError, SongDictionary> = either {

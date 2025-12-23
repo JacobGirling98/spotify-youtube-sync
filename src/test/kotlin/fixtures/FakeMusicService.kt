@@ -55,6 +55,15 @@ class FakeMusicService(
         return Unit.right()
     }
 
+    override fun deleteSongFromPlaylist(songId: Id, playlistId: Id): Either<Error, Unit> {
+        val playlistName = Name(playlistId.value)
+        val playlist = _playlists[playlistName] ?: return NotFoundError.left()
+        val song = _songsById[songId] ?: return NotFoundError.left()
+
+        playlist.remove(song)
+        return Unit.right()
+    }
+
     override fun tracks(playlistId: Id): Either<HttpError, SongDictionary> {
         val playlistName = Name(playlistId.value)
         val playlist = _playlists[playlistName] ?: return HttpResponseError(404, "Playlist not found").left()
