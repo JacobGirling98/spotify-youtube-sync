@@ -7,6 +7,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import org.example.config.ConfigError
 import org.example.config.loadProperties
+import org.example.domain.model.Name
 import java.util.*
 import kotlin.test.Test
 
@@ -15,7 +16,7 @@ class PropertiesTest {
     @Test
     fun `successfully loads all properties when all are present`() {
         loadProperties(readProps(validProps())) shouldBeRight org.example.config.Properties(
-            playlists = listOf("MyPlaylist"),
+            playlists = listOf(Name("MyPlaylist")),
             redirectServerUri = "http://localhost",
             redirectServerPort = 8080,
             spotifyBaseUrl = "https://api.spotify.com",
@@ -28,9 +29,9 @@ class PropertiesTest {
         val props = validProps().apply { setProperty("playlists", "MyPlaylist,AnotherPlaylist,ThirdPlaylist") }
 
         loadProperties(readProps(props)).shouldBeRight().playlists shouldBe listOf(
-            "MyPlaylist",
-            "AnotherPlaylist",
-            "ThirdPlaylist"
+            Name("MyPlaylist"),
+            Name("AnotherPlaylist"),
+            Name("ThirdPlaylist")
         )
 
     }

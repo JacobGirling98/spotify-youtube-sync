@@ -15,6 +15,7 @@ import org.example.domain.model.SongDictionary
 import org.example.domain.music.MusicService
 import org.example.domain.music.createDictionary
 import org.example.domain.music.fillDictionary
+import org.example.domain.music.syncMusic
 import org.example.log.Log
 import org.example.repository.Repository
 import java.time.Duration
@@ -37,14 +38,7 @@ fun main() {
         log.info(youTubeRedirectUri)
 
         Thread.sleep(Duration.ofSeconds(20))
-        sync(
-            spotifyClient,
-            youTubeRestClient,
-            songDictionaryRepository,
-            spotifyPlaylistRepository,
-            youtubePlaylistRepository,
-            log
-        )
+        syncMusic(properties.playlists, spotifyClient, youTubeRestClient, songDictionaryRepository, log)
     }
 }
 

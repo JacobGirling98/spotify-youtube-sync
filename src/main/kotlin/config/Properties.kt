@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import org.example.domain.model.Name
 
 sealed class ConfigVariable(val name: String)
 
@@ -14,7 +15,7 @@ data object SpotifyBaseUrl : ConfigVariable("spotify_base_url")
 data object YouTubeBaseUrl : ConfigVariable("youtube_base_url")
 
 data class Properties(
-    val playlists: List<String>,
+    val playlists: List<Name>,
     val redirectServerUri: String,
     val redirectServerPort: Int,
     val spotifyBaseUrl: String,
@@ -33,7 +34,7 @@ fun loadProperties(readProps: (String) -> Either<ConfigError, java.util.Properti
     either {
         val props = readProps("/config.properties").bind()
 
-        val playlists = getRequiredProperty(props, Playlists, ConfigError.PlaylistsNotSet).split(",")
+        val playlists = getRequiredProperty(props, Playlists, ConfigError.PlaylistsNotSet).split(",").map { Name(it.trim()) }
         val redirectUri = getRequiredProperty(props, RedirectUri, ConfigError.RedirectUriNotSet)
         val redirectPort = getRequiredProperty(props, RedirectPort, ConfigError.RedirectPortNotSet).toIntOrNull()
             ?: raise(ConfigError.RedirectPortNotSet)
