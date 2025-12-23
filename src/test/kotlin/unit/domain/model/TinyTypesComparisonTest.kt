@@ -1,5 +1,6 @@
 package org.example.unit.domain.model
 
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.example.domain.model.Artist
@@ -14,6 +15,11 @@ class TinyTypesComparisonTest {
         Name("Test") shouldBe Name("test")
         Name("TEST") shouldBe Name("test")
         Name("Test").hashCode() shouldBe Name("test").hashCode()
+    }
+    
+    @Test
+    fun `Name comparison should ignore apostrophes`() {
+        Name("Don't Stop Believin'") shouldBe Name("Dont Stop Believin")
     }
 
     @Test
