@@ -13,9 +13,14 @@ import org.example.domain.music.MusicService
 
 class FakeMusicService(
     override val service: Service,
-    playlists: Map<Name, Map<Song, Id>>
+    playlists: List<Playlist>
 ) : MusicService {
-    private val _playlists = playlists.mapValues { it.value.toMutableMap() }.toMutableMap()
+    private val _playlists = playlists.associate { playlist ->
+        playlist.name to playlist.songs.entries.mapNotNull { (song, serviceIds) ->
+            serviceIds.entries[service]?.let { id -> song to id }
+        }.toMap().toMutableMap()
+    }.toMutableMap()
+
     private val _songs = _playlists.values.flatMap { it.entries }.associate { it.key to it.value }.toMutableMap()
     private val _songsById = _songs.entries.associate { it.value to it.key }.toMutableMap()
 

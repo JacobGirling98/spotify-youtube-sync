@@ -5,9 +5,7 @@ import fixtures.data.song
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
-import org.example.domain.model.Id
-import org.example.domain.model.Name
-import org.example.domain.model.Service
+import org.example.domain.model.*
 import kotlin.test.Test
 
 class FakeMusicServiceTest {
@@ -18,9 +16,20 @@ class FakeMusicServiceTest {
     private val firstSong = song("first song")
     private val secondSong = song("second song")
 
-    private val playlists = mapOf(
-        Name("first playlist") to mapOf(firstSong to firstId),
-        Name("all songs") to mapOf(firstSong to firstId, secondSong to secondId)
+    private val playlists = listOf(
+        Playlist(
+            Id("first playlist"),
+            Name("first playlist"),
+            SongDictionary(firstSong to ServiceIds(Service.SPOTIFY to firstId))
+        ),
+        Playlist(
+            Id("all songs"),
+            Name("all songs"),
+            SongDictionary(
+                firstSong to ServiceIds(Service.SPOTIFY to firstId),
+                secondSong to ServiceIds(Service.SPOTIFY to secondId)
+            )
+        )
     )
 
     private val service = FakeMusicService(Service.SPOTIFY, playlists)
