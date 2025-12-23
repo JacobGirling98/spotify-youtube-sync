@@ -1,66 +1,86 @@
 package unit.domain.music
 
 import fixtures.FakeMusicService
+import fixtures.InMemoryRepository
 import fixtures.data.playlist
-import fixtures.data.serviceIds
 import fixtures.data.song
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldContainExactly
-import org.example.domain.model.Id
-import org.example.domain.model.Name
+import org.example.domain.model.*
 import org.example.domain.model.Service.SPOTIFY
 import org.example.domain.model.Service.YOUTUBE_MUSIC
-import org.example.domain.model.ServiceIds
-import org.example.domain.model.SongDictionary
 import org.example.domain.music.syncMusic
 import kotlin.test.Test
 
 class MusicSyncTest {
 
-    val spotifyPlaylistId = Id("spotify-playlist-1")
-    val youTubePlaylistId = Id("youtube-playlist-1")
+    private val spotifyPlaylistIdA = Id("spotify-playlist-A")
+    private val spotifyPlaylistIdB = Id("spotify-playlist-B")
+    private val youTubePlaylistIdA = Id("youtube-playlist-A")
+    private val youTubePlaylistIdB = Id("youtube-playlist-B")
 
-    val spotifySongIdA = Id("spotify-song-id-a")
-    val spotifySongIdB = Id("spotify-song-id-b")
-    val youTubeSongIdA = Id("youtube-song-id-a")
-    val youTubeSongIdB = Id("youtube-song-id-b")
+    private val spotifySongIdA = Id("spotify-song-id-a")
+    private val spotifySongIdB = Id("spotify-song-id-b")
+    private val youTubeSongIdA = Id("youtube-song-id-a")
+    private val youTubeSongIdB = Id("youtube-song-id-b")
 
-    val songA = song("Song A")
-    val songB = song("Song B")
+    private val songA = song("Song A")
+    private val songB = song("Song B")
+
+    private val allSongs = SongDictionary(
+        songA to ServiceIds(SPOTIFY to spotifySongIdA, YOUTUBE_MUSIC to youTubeSongIdA),
+        songB to ServiceIds(SPOTIFY to spotifySongIdB, YOUTUBE_MUSIC to youTubeSongIdB)
+    )
+
+    private val playlistName = "My Playlist"
+    private val otherPlaylistName = "Other Playlist"
+
+    private fun songsFor(service: Service, songs: List<Pair<Song, Id>>) = SongDictionary(
+        songs.associate { (song, id) -> song to ServiceIds(service to id) }
+    )
+
 
     @Test
     fun `adds new song to the target playlist if the source is different`() {
-        val name = "My Playlist"
         val spotifyPlaylist = playlist(
-            spotifyPlaylistId,
-            name,
-            SongDictionary(songA to serviceIds(SPOTIFY), songB to serviceIds(SPOTIFY))
+            spotifyPlaylistIdA,
+            playlistName,
+            songsFor(
+                SPOTIFY, listOf(
+                    songA to spotifySongIdA,
+                    songB to spotifySongIdB
+                )
+            )
         )
         val youTubePlaylist = playlist(
-            youTubePlaylistId,
-            name,
-            SongDictionary(songA to serviceIds(YOUTUBE_MUSIC))
+            youTubePlaylistIdA,
+            playlistName,
+            songsFor(
+                YOUTUBE_MUSIC, listOf(
+                    songA to youTubeSongIdA,
+                )
+            )
         )
 
-        val spotify = FakeMusicService(SPOTIFY, listOf(spotifyPlaylist))
-        val youTube = FakeMusicService(YOUTUBE_MUSIC, listOf(youTubePlaylist))
-
+        val spotify = FakeMusicService(SPOTIFY, listOf(spotifyPlaylist), allSongs)
+        val youTube = FakeMusicService(YOUTUBE_MUSIC, listOf(youTubePlaylist), allSongs)
         val dictionary = SongDictionary(
             songA to ServiceIds(SPOTIFY to spotifySongIdA, YOUTUBE_MUSIC to youTubeSongIdA),
             songB to ServiceIds(SPOTIFY to spotifySongIdB, YOUTUBE_MUSIC to youTubeSongIdB)
         )
+        val dictionaryRepository = InMemoryRepository<SongDictionary>().apply { save(dictionary) }
 
         syncMusic(
-            playlistsToSync = listOf(Name(name)),
+            playlistsToSync = listOf(Name(playlistName)),
             sourceService = spotify,
             targetService = youTube,
-            dictionary = dictionary
+            songDictionaryRepository = dictionaryRepository
         )
 
         youTube.playlists().shouldBeRight() shouldContainExactly listOf(
             playlist(
-                youTubePlaylistId,
-                name,
+                youTubePlaylistIdA,
+                playlistName,
                 SongDictionary(
                     songA to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdA),
                     songB to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdB)
@@ -69,5 +89,119 @@ class MusicSyncTest {
         )
     }
 
+    @Test
+    fun `removes songs from the taret playlist if the source is different`() {
+        val spotifyPlaylist = playlist(
+            spotifyPlaylistIdA,
+            playlistName,
+            SongDictionary(
+                songA to ServiceIds(SPOTIFY to spotifySongIdA),
+            )
+        )
+        val youTubePlaylist = playlist(
+            youTubePlaylistIdA,
+            playlistName,
+            SongDictionary(
+                songA to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdA),
+                songB to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdB)
+            )
+        )
+
+        val spotify = FakeMusicService(SPOTIFY, listOf(spotifyPlaylist), allSongs)
+        val youTube = FakeMusicService(YOUTUBE_MUSIC, listOf(youTubePlaylist), allSongs)
+        val dictionary = SongDictionary(
+            songA to ServiceIds(SPOTIFY to spotifySongIdA, YOUTUBE_MUSIC to youTubeSongIdA),
+            songB to ServiceIds(SPOTIFY to spotifySongIdB, YOUTUBE_MUSIC to youTubeSongIdB)
+        )
+        val dictionaryRepository = InMemoryRepository<SongDictionary>().apply { save(dictionary) }
+
+        syncMusic(
+            playlistsToSync = listOf(Name(playlistName)),
+            sourceService = spotify,
+            targetService = youTube,
+            songDictionaryRepository = dictionaryRepository
+        )
+
+        youTube.playlists().shouldBeRight() shouldContainExactly listOf(
+            playlist(
+                youTubePlaylistIdA,
+                playlistName,
+                SongDictionary(
+                    songA to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdA),
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `syncs multiple playlists with additions and deletions`() {
+        val spotifyPlaylistA = playlist(
+            spotifyPlaylistIdA,
+            playlistName,
+            songsFor(
+                SPOTIFY, listOf(
+                    songA to spotifySongIdA,
+                )
+            )
+        )
+        val spotifyPlaylistB = playlist(
+            spotifyPlaylistIdB,
+            otherPlaylistName,
+            songsFor(
+                SPOTIFY, listOf(
+                    songB to spotifySongIdB,
+                )
+            )
+        )
+        val youTubePlaylistA = playlist(
+            youTubePlaylistIdA,
+            playlistName,
+            songsFor(
+                YOUTUBE_MUSIC, listOf(
+                    songB to youTubeSongIdB,
+                )
+            )
+        )
+        val youTubePlaylistB = playlist(
+            youTubePlaylistIdB,
+            otherPlaylistName,
+            songsFor(
+                YOUTUBE_MUSIC, listOf(
+                    songA to youTubeSongIdA,
+                )
+            )
+        )
+
+        val spotify = FakeMusicService(SPOTIFY, listOf(spotifyPlaylistA, spotifyPlaylistB), allSongs)
+        val youTube = FakeMusicService(YOUTUBE_MUSIC, listOf(youTubePlaylistA, youTubePlaylistB), allSongs)
+        val dictionary = SongDictionary(
+            songA to ServiceIds(SPOTIFY to spotifySongIdA, YOUTUBE_MUSIC to youTubeSongIdA),
+            songB to ServiceIds(SPOTIFY to spotifySongIdB, YOUTUBE_MUSIC to youTubeSongIdB)
+        )
+        val dictionaryRepository = InMemoryRepository<SongDictionary>().apply { save(dictionary) }
+
+        syncMusic(
+            playlistsToSync = listOf(Name(playlistName), Name(otherPlaylistName)),
+            sourceService = spotify,
+            targetService = youTube,
+            songDictionaryRepository = dictionaryRepository
+        )
+
+        youTube.playlists().shouldBeRight() shouldContainExactly listOf(
+            playlist(
+                youTubePlaylistIdA,
+                playlistName,
+                SongDictionary(
+                    songA to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdA)
+                )
+            ), playlist(
+                youTubePlaylistIdB,
+                otherPlaylistName,
+                SongDictionary(
+                    songB to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdB)
+                )
+            )
+        )
+    }
 
 }

@@ -15,5 +15,7 @@ data class ServiceIds(
         ServiceIds(entries.combine(other.entries) { first, _ -> first })
     }
 
+    fun idFor(service: Service): Id? = entries[service]
+
     val services = entries.keys
 }

@@ -19,6 +19,8 @@ data class SongDictionary(
         })
     }
 
+    fun ids(song: Song): ServiceIds? = entries[song]
+
     companion object {
         fun empty() = SongDictionary(emptyMap())
     }

@@ -65,4 +65,19 @@ class SongDictionaryTest {
             )
         )
     }
+
+    @Test
+    fun `ids returns service ids for a song`() {
+        val dictionary = SongDictionary(song to serviceIds)
+
+        dictionary.ids(song) shouldBe serviceIds
+    }
+
+    @Test
+    fun `ids returns null if song is not in dictionary`() {
+        val dictionary = SongDictionary(song to serviceIds)
+        val otherSong = song.copy(Name("Other song"))
+
+        dictionary.ids(otherSong) shouldBe null
+    }
 }

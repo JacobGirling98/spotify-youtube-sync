@@ -13,35 +13,37 @@ import org.example.domain.music.MusicService
 
 class FakeMusicService(
     override val service: Service,
-    playlists: List<Playlist>
+    playlists: List<Playlist>,
+    allSongs: SongDictionary
 ) : MusicService {
-    private val _playlists = playlists.associate { playlist ->
-        playlist.name to playlist.songs.entries.mapNotNull { (song, serviceIds) ->
-            serviceIds.entries[service]?.let { id -> song to id }
-        }.toMap().toMutableMap()
+    private val _playlists: MutableMap<Id, Playlist> = playlists.associate { playlist ->
+        val filteredEntries = playlist.songs.entries.mapNotNull { (song, serviceIds) ->
+            serviceIds.entries[service]?.let { id -> song to ServiceIds(service to id) }
+        }.associate { it }
+
+        val filteredPlaylist = playlist.copy(songs = SongDictionary(filteredEntries))
+        playlist.id to filteredPlaylist
     }.toMutableMap()
 
-    private val _songs = _playlists.values.flatMap { it.entries }.associate { it.key to it.value }.toMutableMap()
-    private val _songsById = _songs.entries.associate { it.value to it.key }.toMutableMap()
+    private val _songs: Map<Song, Id> = allSongs.entries.mapNotNull { (song, serviceIds) ->
+        serviceIds.entries[service]?.let { id -> song to id }
+    }.toMap()
 
-    override fun playlists(): Either<Error, List<Playlist>> = Either.Right(_playlists.map { (name, songs) ->
-        Playlist(
-            Id(name.value),
-            name,
-            SongDictionary(songs.map { (song, id) ->
-                song to ServiceIds(service to id)
-            }.associate { it })
-        )
-    })
+    private val _songsById: Map<Id, Song> = _songs.entries.associate { (song, id) -> id to song }
+
+    override fun playlists(): Either<Error, List<Playlist>> = Either.Right(_playlists.values.toList())
 
     override fun playlists(metadata: List<PlaylistMetadata>): Either<Error, List<Playlist>> =
         Either.Right(metadata.map { playlistMetadata ->
-            Playlist(playlistMetadata.id, playlistMetadata.name, SongDictionary.empty())
+            _playlists[playlistMetadata.id] ?: Playlist(
+                playlistMetadata.id,
+                playlistMetadata.name,
+                SongDictionary.empty()
+            )
         })
 
-    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> = Either.Right(_playlists.map { (name, _) ->
-        PlaylistMetadata(Id(name.value), name)
-    })
+    override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> =
+        Either.Right(_playlists.values.map { PlaylistMetadata(it.id, it.name) })
 
     override fun search(song: Song): Either<Error, SongDictionary> {
         val id = _songs[song] ?: return NoResultsError(song).left()
@@ -52,29 +54,27 @@ class FakeMusicService(
         songId: Id,
         playlistId: Id
     ): Either<Error, Unit> {
-        val playlistName = Name(playlistId.value)
-        val playlist = _playlists[playlistName] ?: return NotFoundError.left()
+        val playlist = _playlists[playlistId] ?: return NotFoundError.left()
         val song = _songsById[songId] ?: return NotFoundError.left()
 
-        playlist[song] = songId
+        val newEntry = song to ServiceIds(service to songId)
+        val newSongs = playlist.songs.entries + newEntry
+
+        _playlists[playlistId] = playlist.copy(songs = SongDictionary(newSongs))
         return Unit.right()
     }
 
     override fun deleteSongFromPlaylist(songId: Id, playlistId: Id): Either<Error, Unit> {
-        val playlistName = Name(playlistId.value)
-        val playlist = _playlists[playlistName] ?: return NotFoundError.left()
+        val playlist = _playlists[playlistId] ?: return NotFoundError.left()
         val song = _songsById[songId] ?: return NotFoundError.left()
 
-        playlist.remove(song)
+        val newSongs = playlist.songs.entries - song
+        _playlists[playlistId] = playlist.copy(songs = SongDictionary(newSongs))
         return Unit.right()
     }
 
     override fun tracks(playlistId: Id): Either<HttpError, SongDictionary> {
-        val playlistName = Name(playlistId.value)
-        val playlist = _playlists[playlistName] ?: return HttpResponseError(404, "Playlist not found").left()
-
-        return SongDictionary(playlist.map { (song, id) ->
-             song to ServiceIds(service to id)
-        }.associate { it }).right()
+        val playlist = _playlists[playlistId] ?: return HttpResponseError(404, "Playlist not found").left()
+        return playlist.songs.right()
     }
 }
