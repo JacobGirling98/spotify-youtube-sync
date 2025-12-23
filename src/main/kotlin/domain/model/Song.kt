@@ -8,24 +8,32 @@ data class Song(
         return "${name.value} - ${artists.joinToString { it.value }}"
     }
 
+    private val normalizedName: String
+        get() {
+            val lower = name.value.lowercase()
+            return when {
+                lower.contains(" (with") -> lower.substringBefore(" (with")
+                lower.contains(" (feat") -> lower.substringBefore(" (feat")
+                else -> lower
+            }
+        }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
         other as Song
 
-        if (name != other.name) return false
-        // Fuzzy match: match if the first artist is the same
-        val thisFirstArtist = artists.firstOrNull()
-        val otherFirstArtist = other.artists.firstOrNull()
-        if (thisFirstArtist != otherFirstArtist) return false
+        if (normalizedName != other.normalizedName) return false
+        
+        // Match if any artist is common to both songs
+        val otherArtists = other.artists.toSet()
+        if (artists.none { it in otherArtists }) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + (artists.firstOrNull()?.hashCode() ?: 0)
-        return result
+        return normalizedName.hashCode()
     }
 }
