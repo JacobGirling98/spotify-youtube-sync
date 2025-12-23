@@ -1,5 +1,7 @@
 package org.example.domain.error
 
+import org.example.domain.model.Name
+import org.example.domain.model.Service
 import org.example.domain.model.Song
 import org.http4k.core.Response
 
@@ -22,3 +24,6 @@ data class NoResultsError(val song: Song) : HttpError("No search results for son
 data object NotFoundError : Error("Not found")
 
 data class MergeError(override val message: String) : Error(message)
+
+data class PlaylistNotFoundError(val name: Name, val service: Service) : Error("Playlist with name '${name.value}' not found in service ${service.name}")
+data class SongNotFoundError(val song: Song, val service: Service) : Error("Song '${song.name.value}' not found in service ${service.name}")

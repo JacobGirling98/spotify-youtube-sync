@@ -1,11 +1,13 @@
 package unit.domain.music
 
+import fixtures.FakeLog
 import fixtures.FakeMusicService
 import fixtures.InMemoryRepository
 import fixtures.data.playlist
 import fixtures.data.song
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import org.example.domain.model.*
 import org.example.domain.model.Service.SPOTIFY
 import org.example.domain.model.Service.YOUTUBE_MUSIC
@@ -39,6 +41,7 @@ class MusicSyncTest {
         songs.associate { (song, id) -> song to ServiceIds(service to id) }
     )
 
+    private val log = FakeLog()
 
     @Test
     fun `adds new song to the target playlist if the source is different`() {
@@ -74,7 +77,8 @@ class MusicSyncTest {
             playlistsToSync = listOf(Name(playlistName)),
             sourceService = spotify,
             targetService = youTube,
-            songDictionaryRepository = dictionaryRepository
+            songDictionaryRepository = dictionaryRepository,
+            log = log
         )
 
         youTube.playlists().shouldBeRight() shouldContainExactly listOf(
@@ -119,7 +123,8 @@ class MusicSyncTest {
             playlistsToSync = listOf(Name(playlistName)),
             sourceService = spotify,
             targetService = youTube,
-            songDictionaryRepository = dictionaryRepository
+            songDictionaryRepository = dictionaryRepository,
+            log = log
         )
 
         youTube.playlists().shouldBeRight() shouldContainExactly listOf(
@@ -184,7 +189,8 @@ class MusicSyncTest {
             playlistsToSync = listOf(Name(playlistName), Name(otherPlaylistName)),
             sourceService = spotify,
             targetService = youTube,
-            songDictionaryRepository = dictionaryRepository
+            songDictionaryRepository = dictionaryRepository,
+            log = log
         )
 
         youTube.playlists().shouldBeRight() shouldContainExactly listOf(
@@ -204,4 +210,58 @@ class MusicSyncTest {
         )
     }
 
+    @Test
+    fun `searches for a song to add if it's not in the song dictionary and saves the new dictionary`() {
+        val spotifyPlaylist = playlist(
+            spotifyPlaylistIdA,
+            playlistName,
+            songsFor(
+                SPOTIFY, listOf(
+                    songA to spotifySongIdA,
+                    songB to spotifySongIdB
+                )
+            )
+        )
+        val youTubePlaylist = playlist(
+            youTubePlaylistIdA,
+            playlistName,
+            songsFor(
+                YOUTUBE_MUSIC, listOf(
+                    songA to youTubeSongIdA,
+                )
+            )
+        )
+
+        val spotify = FakeMusicService(SPOTIFY, listOf(spotifyPlaylist), allSongs)
+        val youTube = FakeMusicService(YOUTUBE_MUSIC, listOf(youTubePlaylist), allSongs)
+        val dictionaryMissingYouTubeSongB = SongDictionary(
+            songA to ServiceIds(SPOTIFY to spotifySongIdA, YOUTUBE_MUSIC to youTubeSongIdA),
+            songB to ServiceIds(SPOTIFY to spotifySongIdB)
+        )
+        val dictionaryRepository = InMemoryRepository<SongDictionary>().apply { save(dictionaryMissingYouTubeSongB) }
+
+        syncMusic(
+            playlistsToSync = listOf(Name(playlistName)),
+            sourceService = spotify,
+            targetService = youTube,
+            songDictionaryRepository = dictionaryRepository,
+            log = log
+        ).shouldBeRight()
+
+        youTube.playlists().shouldBeRight() shouldContainExactly listOf(
+            playlist(
+                youTubePlaylistIdA,
+                playlistName,
+                SongDictionary(
+                    songA to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdA),
+                    songB to ServiceIds(YOUTUBE_MUSIC to youTubeSongIdB)
+                )
+            )
+        )
+
+        dictionaryRepository.load().shouldBeRight() shouldBe SongDictionary(
+            songA to ServiceIds(SPOTIFY to spotifySongIdA, YOUTUBE_MUSIC to youTubeSongIdA),
+            songB to ServiceIds(SPOTIFY to spotifySongIdB, YOUTUBE_MUSIC to youTubeSongIdB)
+        )
+    }
 }

@@ -13,8 +13,8 @@ data class SongDictionary(
     )
 
     fun mergeWith(other: SongDictionary): Either<MergeError, SongDictionary> = either {
-        SongDictionary(entries.combine(other.entries) { song, first, second ->
-            first.mergeWith(second).mapLeft { MergeError("Error when combining ${song.name.value}: ${it.message}") }
+        SongDictionary(entries.combine(other.entries) { song, sourceServiceIds, otherServiceIds ->
+            sourceServiceIds.mergeWith(otherServiceIds).mapLeft { MergeError("Error when combining ${song.name.value}: ${it.message}") }
                 .bind()
         })
     }
