@@ -264,4 +264,66 @@ class MusicSyncTest {
             songB to ServiceIds(SPOTIFY to spotifySongIdB, YOUTUBE_MUSIC to youTubeSongIdB)
         )
     }
+
+    @Test
+    fun `returns PlaylistNotFoundError if a playlist to sync exists in source but not target`() {
+        val spotifyPlaylist = playlist(spotifyPlaylistIdA, playlistName, SongDictionary.empty())
+        // YouTube has no playlist
+
+        val spotify = FakeMusicService(SPOTIFY, listOf(spotifyPlaylist), allSongs)
+        val youTube = FakeMusicService(YOUTUBE_MUSIC, emptyList(), allSongs)
+        val dictionaryRepository = InMemoryRepository<SongDictionary>()
+
+        val result = syncMusic(
+            playlistsToSync = listOf(Name(playlistName)),
+            sourceService = spotify,
+            targetService = youTube,
+            songDictionaryRepository = dictionaryRepository,
+            log = log
+        )
+
+        result shouldBe arrow.core.Either.Left(org.example.domain.error.PlaylistNotFoundError(Name(playlistName), YOUTUBE_MUSIC))
+    }
+
+    @Test
+    fun `returns SongNotFoundError if a song to add cannot be found in the dictionary for the target service`() {
+        val spotifyPlaylist = playlist(
+            spotifyPlaylistIdA,
+            playlistName,
+            songsFor(SPOTIFY, listOf(songA to spotifySongIdA))
+        )
+        val youTubePlaylist = playlist(youTubePlaylistIdA, playlistName, SongDictionary.empty())
+
+        // Dictionary has the song, but ONLY for Spotify. It's missing YouTube ID.
+        // And let's assume search fails (or we just mock it such that it's not found/added to dictionary effectively before this check?
+        // Wait, syncMusic attempts to fill dictionary first.
+        // So if search fails, it logs error but continues.
+        // If search failed, the ID is still missing in dictionary.
+        // Then `dictionary.ids(song)?.idFor(targetService.service)` returns null.
+        // Then it raises SongNotFoundError.
+
+        // To simulate this, we need a dictionary that definitely lacks the ID, and ensure search doesn't find it.
+        // FakeMusicService search uses `allSongs`.
+        // So if we remove the YouTube ID from `allSongs`, search will fail (NoResultsError).
+        
+        val limitedAllSongs = SongDictionary(
+            songA to ServiceIds(SPOTIFY to spotifySongIdA) // YouTube ID missing
+        )
+
+        val spotifyWithLimitedSongs = FakeMusicService(SPOTIFY, listOf(spotifyPlaylist), limitedAllSongs)
+        val youTubeWithLimitedSongs = FakeMusicService(YOUTUBE_MUSIC, listOf(youTubePlaylist), limitedAllSongs)
+        
+        val dictionary = SongDictionary(songA to ServiceIds(SPOTIFY to spotifySongIdA))
+        val dictionaryRepository = InMemoryRepository<SongDictionary>().apply { save(dictionary) }
+
+        val result = syncMusic(
+            playlistsToSync = listOf(Name(playlistName)),
+            sourceService = spotifyWithLimitedSongs,
+            targetService = youTubeWithLimitedSongs,
+            songDictionaryRepository = dictionaryRepository,
+            log = log
+        )
+
+        result shouldBe arrow.core.Either.Left(org.example.domain.error.SongNotFoundError(songA, YOUTUBE_MUSIC))
+    }
 }

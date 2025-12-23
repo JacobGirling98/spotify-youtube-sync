@@ -25,5 +25,5 @@ data object NotFoundError : Error("Not found")
 
 data class MergeError(override val message: String) : Error(message)
 
-data class PlaylistNotFoundError(val name: Name, val service: Service) : Error("Playlist with name '${name.value}' not found in service ${service.name}")
-data class SongNotFoundError(val song: Song, val service: Service) : Error("Song '${song.name.value}' not found in service ${service.name}")
+data class PlaylistNotFoundError(val name: Name, val service: Service) : Error("Playlist ${name.value} not found in ${service.name}")
+data class SongNotFoundError(val song: Song, val service: Service) : Error("Song ${song.name.value} not found in ${service.name}")
