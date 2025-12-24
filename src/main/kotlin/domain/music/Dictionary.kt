@@ -23,7 +23,7 @@ fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorW
             val currentEntryDictionary = SongDictionary(song to serviceIds)
             target.search(song)
                 .flatMap { candidates ->
-                    val bestMatch = findBestMatch(song, candidates)
+                    val bestMatch = SongMatcher.findBestMatch(song, candidates)
                     if (bestMatch != null) {
                         currentEntryDictionary.mergeWith(SongDictionary(song to ServiceIds(target.service to bestMatch.id)))
                     } else {
@@ -37,12 +37,6 @@ fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorW
                 .flatMap { mergedDictionary -> wrapper.value.mergeWith(mergedDictionary) }
         }
     }
-
-fun findBestMatch(song: Song, candidates: List<SongMatchCandidate>): SongMatchCandidate? {
-    // Basic implementation: take the first one. 
-    // Future improvements: check duration, Levenshtein distance on title, etc.
-    return candidates.firstOrNull()
-}
 
 fun SongDictionary.subsetOf(other: SongDictionary): SongDictionary = SongDictionary(other.entries.filterKeys { song -> song in entries.keys })
 

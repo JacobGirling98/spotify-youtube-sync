@@ -194,7 +194,12 @@ private class FakeYouTubeMusic private constructor(
 
         val matchingId = songs[song]
         return if (matchingId != null) {
-            val candidate = SongMatchCandidate(matchingId, song.name.value, "Unknown", null)
+            val candidate = SongMatchCandidate(
+                matchingId,
+                song.name.value,
+                song.artists.firstOrNull()?.value ?: "Unknown",
+                null
+            )
             Either.Right(listOf(candidate))
         } else {
             Either.Left(NoResultsError(song))
