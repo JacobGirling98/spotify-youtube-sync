@@ -5,54 +5,90 @@ import org.example.domain.model.SongMatchCandidate
 
 object SongMatcher {
     fun findBestMatch(original: Song, candidates: List<SongMatchCandidate>): SongMatchCandidate? {
-        val normalizedOriginalTitle = normalizeTitle(original.name.value)
+        val cleanedOriginalTitle = cleanCoreTitle(original.name.value)
+        val originalVersionTags = extractVersionTags(original.name.value)
         val originalArtists = original.artists.map { it.value.lowercase() }.toSet()
 
-        // 1. Filter candidates that match the title (fuzzy)
-        val titleMatches = candidates.filter {
-            val normalizedCandidateTitle = normalizeTitle(it.title)
-            // Check for exact match of normalized strings, or strict containment
-            normalizedOriginalTitle == normalizedCandidateTitle || 
-            normalizedCandidateTitle.contains(normalizedOriginalTitle) ||
-            normalizedOriginalTitle.contains(normalizedCandidateTitle)
-        }
-
-        // 2. Filter / Select based on Artist match
-        // We check if ANY of the original artists appear in the Channel Title OR the Video Title
-        return titleMatches.firstOrNull {
-            val candidateText = (it.channelTitle + " " + it.title).lowercase() 
+        return candidates.firstOrNull { candidate ->
+            val cleanedCandidateTitle = cleanCoreTitle(candidate.title)
+            val candidateVersionTags = extractVersionTags(candidate.title)
             
-            originalArtists.any {
-                // Check if artist name is in the candidate text
-                // We assume artist names are significant enough not to be random noise
-                candidateText.contains(it)
-            }
+            // Primary Title Match
+            val titleMatches = cleanedOriginalTitle == cleanedCandidateTitle || 
+                               (cleanedCandidateTitle.contains(cleanedOriginalTitle) && cleanedOriginalTitle.isNotBlank()) ||
+                               (cleanedOriginalTitle.contains(cleanedCandidateTitle) && cleanedCandidateTitle.isNotBlank())
+
+
+            if (!titleMatches) return@firstOrNull false
+
+            // Artist Match
+            val candidateText = (candidate.channelTitle + " " + candidate.title).lowercase()
+            val artistMatches = originalArtists.any { artist -> candidateText.contains(artist) }
+
+            if (!artistMatches) return@firstOrNull false
+
+            // Version Tag Match - this is crucial for distinguishing
+            originalVersionTags == candidateVersionTags
         }
     }
 
-    internal fun normalizeTitle(title: String): String {
+    internal fun cleanCoreTitle(title: String): String {
         var text = title.lowercase()
 
-        // Remove (feat. X), (with X), [Official Video], etc.
-        val patterns = listOf(
-            "\\(feat.*?\\)",
-            "\\(with.*?\\)",
-            "\\[.*?\\]", // [Official Video]
+        // Remove truly irrelevant noise for core title comparison, including featured artists from title for core match
+        val noisePatterns = listOf(
+            "\\(feat.*?\\)", // (feat. X)
+            "\\(with.*?\\)", // (with X)
+            "\\[.*?\\]", // [Official Video], [Lyrics]
             "\\(official.*?\\)", // (Official Audio)
             " - topic", // YouTube Topic channels suffix
             "lyrics",
             "official video",
-            "official audio"
+            "official audio",
+            "mv" // Music video tag
         )
 
-        patterns.forEach {
-            text = text.replace(Regex(it, RegexOption.IGNORE_CASE), "")
+        noisePatterns.forEach { pattern ->
+            text = text.replace(Regex(pattern, RegexOption.IGNORE_CASE), "")
         }
 
-        // Remove special characters that might differ (like hyphens, dots)
-        // Keep alphanumeric and spaces
+        // Remove special characters, keep alphanumeric and spaces
+        text = text.replace("'", "") // Remove apostrophes here for core matching
         text = text.replace(Regex("[^a-z0-9 ]"), "")
 
         return text.trim().replace(Regex("\\s+"), " ")
+    }
+
+    internal fun extractVersionTags(title: String): Set<String> {
+        val tags = mutableSetOf<String>()
+        val lowerTitle = title.lowercase()
+
+        val versionRegexes = listOf(
+            Regex("\\(remix\\)", RegexOption.IGNORE_CASE),
+            Regex(" - remix", RegexOption.IGNORE_CASE),
+            Regex("\\(acoustic\\)", RegexOption.IGNORE_CASE),
+            Regex(" - acoustic", RegexOption.IGNORE_CASE),
+            Regex("\\(live\\)", RegexOption.IGNORE_CASE),
+            Regex(" - live", RegexOption.IGNORE_CASE),
+            Regex("\\(taylor.s version\\)", RegexOption.IGNORE_CASE),
+            Regex(" - taylor.s version", RegexOption.IGNORE_CASE),
+            Regex("\\(atl.s version\\)", RegexOption.IGNORE_CASE),
+            Regex(" - atl.s version", RegexOption.IGNORE_CASE),
+            Regex("\\(from the room below\\)", RegexOption.IGNORE_CASE),
+            Regex(" - from the room below", RegexOption.IGNORE_CASE)
+            // Removed (feat. X) and (with X) from here, these are featured artists, not version tags
+        )
+
+        versionRegexes.forEach { regex ->
+            regex.findAll(lowerTitle).forEach { match ->
+                val tag = match.value.lowercase()
+                    .replace(Regex("[^a-z0-9 ]"), "") // Remove punctuation
+                    .trim()
+                if (tag.isNotBlank()) {
+                    tags.add(tag.replace(Regex("\\s+"), " ")) // Normalize spaces and add
+                }
+            }
+        }
+        return tags
     }
 }
