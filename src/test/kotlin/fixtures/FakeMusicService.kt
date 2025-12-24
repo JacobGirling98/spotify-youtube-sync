@@ -45,9 +45,17 @@ class FakeMusicService(
     override fun playlistMetadata(): Either<Error, List<PlaylistMetadata>> =
         Either.Right(_playlists.values.map { PlaylistMetadata(it.id, it.name) })
 
-    override fun search(song: Song): Either<Error, SongDictionary> {
+    override fun search(song: Song): Either<Error, List<SongMatchCandidate>> {
         val id = _songs[song] ?: return NoResultsError(song).left()
-        return SongDictionary(song to ServiceIds(service to id)).right()
+        // Simulate a perfect match
+        return listOf(
+            SongMatchCandidate(
+                id = id,
+                title = song.name.value,
+                channelTitle = song.artists.firstOrNull()?.value ?: "Unknown Artist",
+                durationMs = 0 // Fakes don't care about duration for now
+            )
+        ).right()
     }
 
     override fun addSongToPlaylist(

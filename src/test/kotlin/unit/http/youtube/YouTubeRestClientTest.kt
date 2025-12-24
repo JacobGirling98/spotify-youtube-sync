@@ -238,9 +238,9 @@ class YouTubeRestClientTest {
 
     @Test
     fun `can search for a song and get the resulting ids`() {
-        val song = Song(Name("My song"), listOf(Artist("My artist")))
+        val song = Song(Name("Against The Current - burn it down"), listOf(Artist("Against The Current")))
         val http: HttpHandler = { request ->
-            request.query("q") shouldBe "My song My artist"
+            request.query("q") shouldBe "Against The Current - burn it down Against The Current official audio"
             request.query("part") shouldBe "snippet,id"
             request.query("type") shouldBe "video"
             Response(OK).body(youTubeSearchList("video-id"))
@@ -248,21 +248,28 @@ class YouTubeRestClientTest {
 
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
-        val songDictionary = client.search(song)
+        val candidates = client.search(song)
 
-        songDictionary shouldBeRight SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to Id("video-id")))
+        candidates shouldBeRight listOf(
+            SongMatchCandidate(
+                Id("video-id"),
+                "Against The Current - burn it down",
+                "Against The Current",
+                null
+            )
+        )
     }
 
     @Test
-    fun `error if no search results`() {
+    fun `returns empty list if no search results`() {
         val song = Song(Name("My song"), listOf(Artist("My artist")))
         val http: HttpHandler = { Response(OK).body(youTubeSearchListWithNoResults()) }
 
         val client = YouTubeRestClient(http, TestTokenManager(), "youtube")
 
-        val songDictionary = client.search(song)
+        val candidates = client.search(song)
 
-        songDictionary shouldBeLeft NoResultsError(song)
+        candidates shouldBeRight emptyList()
     }
 
     @Test

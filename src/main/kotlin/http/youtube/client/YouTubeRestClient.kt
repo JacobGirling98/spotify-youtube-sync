@@ -27,6 +27,8 @@ import org.http4k.core.with
 import org.http4k.lens.BodyLens
 import org.http4k.lens.bearerAuth
 
+import org.example.domain.model.SongMatchCandidate
+
 class YouTubeRestClient(
     private val http: HttpHandler,
     private val tokenManager: TokenManager,
@@ -60,10 +62,10 @@ class YouTubeRestClient(
         }
     }
 
-    override fun search(song: Song): Either<Error, SongDictionary> = either {
+    override fun search(song: Song): Either<Error, List<SongMatchCandidate>> = either {
         val request = Request(GET, "$baseUrl/search")
             .bearerAuth(tokenManager.token().bind().value)
-            .query("q", "${song.name.value} ${song.artists.joinToString(" ") { it.value }}")
+            .query("q", "${song.name.value} ${song.artists.joinToString(" ") { it.value }} official audio")
             .query("part", "snippet,id")
             .query("type", "video")
         val response = http(request)
@@ -72,9 +74,14 @@ class YouTubeRestClient(
 
         val page = catchJsonError { searchLens(response) }.bind()
 
-        val firstResult = page.items.firstOrNull() ?: raise(NoResultsError(song))
-
-        SongDictionary(song to ServiceIds(Service.YOUTUBE_MUSIC to firstResult.id.videoId))
+        page.items.map { searchResult ->
+            SongMatchCandidate(
+                id = searchResult.id.videoId,
+                title = searchResult.snippet.title.value,
+                channelTitle = searchResult.snippet.channelTitle.value,
+                durationMs = null
+            )
+        }
     }
 
     override fun addSongToPlaylist(

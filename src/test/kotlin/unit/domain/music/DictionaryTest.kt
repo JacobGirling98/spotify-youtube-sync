@@ -189,12 +189,16 @@ private class FakeYouTubeMusic private constructor(
         TODO("Not needed for these tests")
     }
 
-    override fun search(song: Song): Either<Error, SongDictionary> {
+    override fun search(song: Song): Either<Error, List<SongMatchCandidate>> {
         if (failOnSearch) fail("Search was called but should not have been called: ${song.name.value}")
 
         val matchingId = songs[song]
-        return if (matchingId != null) Either.Right(SongDictionary(song to ServiceIds(YOUTUBE_MUSIC to matchingId)))
-        else Either.Left(NoResultsError(song))
+        return if (matchingId != null) {
+            val candidate = SongMatchCandidate(matchingId, song.name.value, "Unknown", null)
+            Either.Right(listOf(candidate))
+        } else {
+            Either.Left(NoResultsError(song))
+        }
     }
 
     override fun addSongToPlaylist(

@@ -37,7 +37,9 @@ fun syncMusic(
     // it.entries.filter { (song, ids) -> song.name == Name("Impermanence") } (multiple artists)
 
 
-    val updatedDictionaryWithErrors = (sourcePlaylists + targetPlaylists).createDictionary()
+    val createDictionary = (sourcePlaylists + targetPlaylists).createDictionary().onRight { songDictionaryRepository.save(it) }
+
+    val updatedDictionaryWithErrors = createDictionary
         .flatMap { dictionaryFromDiskOrEmpty.mergeWith(it) }
         .map { it.fillDictionary(sourceService.service, targetService) }
         .bind()

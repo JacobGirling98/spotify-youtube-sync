@@ -8,11 +8,11 @@ import org.example.domain.error.Error
 import org.example.domain.error.MergeError
 import org.example.domain.model.*
 
+import org.example.domain.error.NoResultsError
+
 fun List<Playlist>.createDictionary(): Either<MergeError, SongDictionary> = either {
     fold(SongDictionary.empty()) { acc, playlist -> acc.mergeWith(playlist.songs).bind() }
 }
-
-
 
 fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorWrapper<SongDictionary> =
     entries.fold(SongDictionary.empty().withNoErrors()) { wrapper, (song, serviceIds) ->
@@ -22,7 +22,14 @@ fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorW
         } else {
             val currentEntryDictionary = SongDictionary(song to serviceIds)
             target.search(song)
-                .flatMap { searchDictionary -> currentEntryDictionary.mergeWith(searchDictionary) }
+                .flatMap { candidates ->
+                    val bestMatch = findBestMatch(song, candidates)
+                    if (bestMatch != null) {
+                        currentEntryDictionary.mergeWith(SongDictionary(song to ServiceIds(target.service to bestMatch.id)))
+                    } else {
+                        Either.Left(NoResultsError(song))
+                    }
+                }
                 .fold(
                     { searchOrMergeError -> ErrorWrapper(listOf(searchOrMergeError), currentEntryDictionary) },
                     { mergedDictionary -> mergedDictionary.withNoErrors() }
@@ -30,6 +37,12 @@ fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorW
                 .flatMap { mergedDictionary -> wrapper.value.mergeWith(mergedDictionary) }
         }
     }
+
+fun findBestMatch(song: Song, candidates: List<SongMatchCandidate>): SongMatchCandidate? {
+    // Basic implementation: take the first one. 
+    // Future improvements: check duration, Levenshtein distance on title, etc.
+    return candidates.firstOrNull()
+}
 
 fun SongDictionary.subsetOf(other: SongDictionary): SongDictionary = SongDictionary(other.entries.filterKeys { song -> song in entries.keys })
 

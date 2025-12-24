@@ -71,8 +71,9 @@ class FakeMusicServiceTest {
     @Test
     fun `can search for a song`() {
         val result = service.search(firstSong).shouldBeRight()
-        result.entries.size shouldBe 1
-        result.entries[firstSong] shouldBe org.example.domain.model.ServiceIds(Service.SPOTIFY to firstId)
+        result.size shouldBe 1
+        result.first().id shouldBe firstId
+        result.first().title shouldBe firstSong.name.value
     }
 
     @Test

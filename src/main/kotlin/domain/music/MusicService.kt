@@ -10,13 +10,15 @@ import org.example.domain.model.Service
 import org.example.domain.model.Song
 import org.example.domain.model.SongDictionary
 
+import org.example.domain.model.SongMatchCandidate
+
 interface MusicService {
     val service: Service
 
     fun playlists(): Either<Error, List<Playlist>>
     fun playlists(metadata: List<PlaylistMetadata>): Either<Error, List<Playlist>>
     fun playlistMetadata(): Either<Error, List<PlaylistMetadata>>
-    fun search(song: Song): Either<Error, SongDictionary>
+    fun search(song: Song): Either<Error, List<SongMatchCandidate>>
     fun addSongToPlaylist(songId: Id, playlistId: Id): Either<Error, Unit>
     fun deleteSongFromPlaylist(songId: Id, playlistId: Id): Either<Error, Unit>
     fun tracks(playlistId: Id): Either<HttpError, SongDictionary>

@@ -54,7 +54,7 @@ class SpotifyRestClient(
         }
     }
 
-    override fun search(song: Song): Either<Error, SongDictionary> {
+    override fun search(song: Song): Either<Error, List<SongMatchCandidate>> {
         TODO("Not yet implemented")
     }
 
