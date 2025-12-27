@@ -4,6 +4,36 @@ import org.example.domain.model.Song
 import org.example.domain.model.SongMatchCandidate
 
 object SongMatcher {
+
+    private val commonNoisePatterns = listOf(
+        "\\[.*?\\]",
+        "\\(official.*?\\)",
+        " - topic",
+        "lyrics",
+        "official video",
+        "official audio",
+        "mv",
+        "\\(feat.*?\\)",
+        "\\(with.*?\\)",
+        " ft\\.[^()\\-]*", // Remove ft. and following until paren, hyphen or end
+        " featuring [^()\\-]*"
+    ).map { Regex(it, RegexOption.IGNORE_CASE) }
+
+    private val versionPatterns = listOf(
+        "\\(remix\\)",
+        " - remix",
+        "\\(acoustic.*?\\)",
+        " - acoustic.*?",
+        "\\(live.*?\\)",
+        " - live",
+        "\\(taylor.s version\\)",
+        " - taylor.s version",
+        "\\(atl.s version\\)",
+        " - atl.s version",
+        "\\(from the room below\\)",
+        " - from the room below"
+    ).map { Regex(it, RegexOption.IGNORE_CASE) }
+
     fun findBestMatch(original: Song, candidates: List<SongMatchCandidate>): SongMatchCandidate? {
         val cleanedOriginalTitle = cleanCoreTitle(original.name.value)
         val originalVersionTags = extractVersionTags(original.name.value)
@@ -33,42 +63,16 @@ object SongMatcher {
     }
 
     fun cleanCoreTitle(title: String): String {
-        var text = title.lowercase()
+        // Start by cleaning for canonical key (removes noise, keeps versions)
+        var text = cleanTitleForCanonicalKey(title)
         
-        // Remove all common noise, featured artists, and version tags for the most basic core title
-        val noiseAndTagsPatterns = listOf(
-            "\\(feat.*?\\)", // (feat. X)
-            "\\(with.*?\\)", // (with X)
-            "\\[.*?\\]", // [Official Video], [Lyrics]
-            "\\(official.*?\\)", // (Official Audio)
-            " - topic", // YouTube Topic channels suffix
-            "lyrics",
-            "official video",
-            "official audio",
-            "mv", // Music video tag
-            "\\(remix\\)", // (Remix)
-            " - remix", // - Remix
-            "\\(acoustic.*?\\)", // (Acoustic Version)
-            " - acoustic.*?", // - Acoustic Version
-            "\\(live.*?\\)", // (Live)
-            " - live", // - Live
-            "\\(taylor.s version\\)",
-            " - taylor.s version",
-            "\\(atl.s version\\)",
-            " - atl.s version",
-            "\\(from the room below\\)",
-            " - from the room below",
-            " ft\\.", // ft.
-            " featuring" // featuring
-        )
-
-        noiseAndTagsPatterns.forEach { pattern ->
-            text = text.replace(Regex(pattern, RegexOption.IGNORE_CASE), "")
+        // Then remove versions
+        versionPatterns.forEach { regex ->
+            text = text.replace(regex, "")
         }
 
-        // Remove special characters, keep alphanumeric and spaces
-        text = text.replace("'", "") // Remove apostrophes here for core matching
-        text = text.replace(Regex("[^a-z0-9 ]"), " ") // Replace non-alphanumeric with space
+        // Final polish for core title (remove special chars including parens and hyphens now)
+        text = text.replace(Regex("[^a-z0-9 ]"), " ")
 
         return text.trim().replace(Regex("\\s+"), " ")
     }
@@ -77,23 +81,7 @@ object SongMatcher {
         val tags = mutableSetOf<String>()
         val lowerTitle = title.lowercase()
 
-        val versionRegexes = listOf(
-            Regex("\\(remix\\)", RegexOption.IGNORE_CASE),
-            Regex(" - remix", RegexOption.IGNORE_CASE),
-            Regex("\\(acoustic\\)", RegexOption.IGNORE_CASE),
-            Regex(" - acoustic", RegexOption.IGNORE_CASE),
-            Regex("\\(live\\)", RegexOption.IGNORE_CASE),
-            Regex(" - live", RegexOption.IGNORE_CASE),
-            Regex("\\(taylor.s version\\)", RegexOption.IGNORE_CASE),
-            Regex(" - taylor.s version", RegexOption.IGNORE_CASE),
-            Regex("\\(atl.s version\\)", RegexOption.IGNORE_CASE),
-            Regex(" - atl.s version", RegexOption.IGNORE_CASE),
-            Regex("\\(from the room below\\)", RegexOption.IGNORE_CASE),
-            Regex(" - from the room below", RegexOption.IGNORE_CASE)
-            // Featured artists are not version tags, they are handled in cleanCoreTitle
-        )
-
-        versionRegexes.forEach { regex ->
+        versionPatterns.forEach { regex ->
             regex.findAll(lowerTitle).forEach { match ->
                 val tag = match.value.lowercase()
                     .replace(Regex("[^a-z0-9 ]"), "") // Remove punctuation
@@ -109,32 +97,9 @@ object SongMatcher {
     fun cleanTitleForCanonicalKey(title: String): String {
         var text = title.lowercase()
 
-        // Remove noise (Official Video, Lyrics, etc.)
-        val noisePatterns = listOf(
-            "\\[.*?\\]",
-            "\\(official.*?\\)",
-            " - topic",
-            "lyrics",
-            "official video",
-            "official audio",
-            "mv"
-        )
-        noisePatterns.forEach { pattern ->
-            text = text.replace(Regex(pattern, RegexOption.IGNORE_CASE), "")
+        commonNoisePatterns.forEach { regex ->
+            text = text.replace(regex, "")
         }
-
-        // Remove featured artists and with
-        val featPatterns = listOf(
-            "\\(feat.*?\\)",
-            "\\(with.*?\\)"
-        )
-        featPatterns.forEach { pattern ->
-            text = text.replace(Regex(pattern, RegexOption.IGNORE_CASE), "")
-        }
-
-        // Remove 'ft.' and 'featuring' and everything after
-        text = text.replace(Regex(" ft\\..*", RegexOption.IGNORE_CASE), "")
-        text = text.replace(Regex(" featuring .*", RegexOption.IGNORE_CASE), "")
 
         // Normalize special characters
         text = text.replace("'", "") // Remove apostrophes
