@@ -1,6 +1,6 @@
 package unit.http.youtube
 
-import fixtures.*
+import fixtures.TestTokenManager
 import fixtures.data.youTubeCurrentUserPlaylists
 import fixtures.data.youTubePlaylistItems
 import fixtures.data.youTubeSearchList
@@ -12,9 +12,7 @@ import io.kotest.matchers.string.shouldInclude
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.example.domain.error.HttpResponseError
 import org.example.domain.error.JsonError
-import org.example.domain.error.NoResultsError
 import org.example.domain.model.*
-import org.example.domain.model.PlaylistMetadata
 import org.example.domain.model.Service.YOUTUBE_MUSIC
 import org.example.http.youtube.client.YouTubeRestClient
 import org.example.http.youtube.model.Playlist
@@ -385,7 +383,8 @@ class YouTubeRestClientTest {
         val http: HttpHandler = { Response(NO_CONTENT) }
         val client = YouTubeRestClient(http, TestTokenManager(tokenFailure = true), "youtube")
 
-        client.deleteSongFromPlaylist(Id("song-id"), Id("playlist-id")).leftOrNull().shouldBeInstanceOf<HttpResponseError>()
+        client.deleteSongFromPlaylist(Id("song-id"), Id("playlist-id")).leftOrNull()
+            .shouldBeInstanceOf<HttpResponseError>()
     }
 
     @Test
@@ -413,8 +412,21 @@ class YouTubeRestClientTest {
         val metadata = listOf(PlaylistMetadata(Id("playlist-id-1"), Name("Playlist One")))
         val http: HttpHandler = { request ->
             when {
-                request.uri.toString().contains("playlistItems") -> Response(OK).body(youTubePlaylistItems(song, artist, songId))
-                request.uri.toString().contains("playlists") -> Response(OK).body(youTubeCurrentUserPlaylists("playlist-id-1", "Playlist One"))
+                request.uri.toString().contains("playlistItems") -> Response(OK).body(
+                    youTubePlaylistItems(
+                        song,
+                        artist,
+                        songId
+                    )
+                )
+
+                request.uri.toString().contains("playlists") -> Response(OK).body(
+                    youTubeCurrentUserPlaylists(
+                        "playlist-id-1",
+                        "Playlist One"
+                    )
+                )
+
                 else -> fail("Unknown URL hit")
             }
         }
@@ -425,6 +437,12 @@ class YouTubeRestClientTest {
         val playlists = client.playlists(metadata)
 
         // Assert
-        playlists shouldBeRight listOf(Playlist(Id("playlist-id-1"), Name("Playlist One"), SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(YOUTUBE_MUSIC to Id(songId)))))
+        playlists shouldBeRight listOf(
+            Playlist(
+                Id("playlist-id-1"),
+                Name("Playlist One"),
+                SongDictionary(Song(Name(song), listOf(Artist(artist))) to ServiceIds(YOUTUBE_MUSIC to Id(songId)))
+            )
+        )
     }
 }

@@ -1,5 +1,7 @@
 package org.example.domain.model
 
+import org.example.domain.music.SongMatcher
+
 data class Song(
     val name: Name,
     val artists: List<Artist>
@@ -8,32 +10,10 @@ data class Song(
         return "${name.value} - ${artists.joinToString { it.value }}"
     }
 
-    private val normalizedName: String
-        get() {
-            val lower = name.value.lowercase()
-            return when {
-                lower.contains(" (with") -> lower.substringBefore(" (with")
-                lower.contains(" (feat") -> lower.substringBefore(" (feat")
-                else -> lower
-            }
-        }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Song
-
-        if (normalizedName != other.normalizedName) return false
+    fun toCanonicalKey(): String {
+        val cleanedTitle = SongMatcher.cleanTitleForCanonicalKey(this.name.value)
+        val artistsKey = this.artists.map { it.value.lowercase() }.sorted().joinToString(",")
         
-        // Match if any artist is common to both songs
-        val otherArtists = other.artists.toSet()
-        if (artists.none { it in otherArtists }) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return normalizedName.hashCode()
+        return "$cleanedTitle::$artistsKey"
     }
 }

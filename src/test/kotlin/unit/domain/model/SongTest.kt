@@ -12,45 +12,56 @@ class SongTest {
     private val artist = Artist("Artist Name")
 
     @Test
-    fun `same songs are equal`() {
-        val song = Song(name, listOf(artist))
-
-        song shouldBe song
+    fun `toCanonicalKey handles empty artist list`() {
+        val song = Song(Name("Instrumental Song"), emptyList())
+        song.toCanonicalKey() shouldBe "instrumental song::"
     }
 
     @Test
-    fun `songs are the same even if the names are different cases`() {
-        val song1 = Song(Name("Song Name"), listOf(artist))
-        val song2 = Song(Name("song name"), listOf(artist))
-
-        song1 shouldBe song2
+    fun `toCanonicalKey normalizes title cases and special characters`() {
+        val song = Song(Name("SONG-NAME (Official Video)"), listOf(Artist("ARTIST NAME")))
+        song.toCanonicalKey() shouldBe "song name::artist name"
     }
 
     @Test
-    fun `if name is the same and the first artist is the same then the song is the same`() {
-        val song1 = Song(name, listOf(artist, Artist("Another Artist")))
-        val song2 = Song(name, listOf(artist))
-
-        song1 shouldBe song2
+    fun `toCanonicalKey works for basic case`() {
+        val song = Song(Name("Song Name"), listOf(artist))
+        song.toCanonicalKey() shouldBe "song name::artist name"
     }
 
     @Test
-    fun `if one artist features in the name of the song and is in the list of artists, then do not consider them when comparing songs`() {
-        val withSong = Song(Name("Obey (with YUNGBLUD)"), listOf(Artist("Bring Me The Horizon"), Artist("YUNGBLUD")))
-        val featSong = Song(Name("Obey (feat YUNGBLUD)"), listOf(Artist("Bring Me The Horizon"), Artist("YUNGBLUD")))
-        val featStopSong = Song(Name("Obey (feat. YUNGBLUD)"), listOf(Artist("Bring Me The Horizon"), Artist("YUNGBLUD")))
-        val plainSong = Song(Name("Obey"), listOf(Artist("Bring Me The Horizon")))
-
-        withSong shouldBe plainSong
-        featSong shouldBe plainSong
-        featStopSong shouldBe plainSong
+    fun `toCanonicalKey works with 'with' cases`() {
+        val song = Song(Name("Song Name (with Guest)"), listOf(artist))
+        song.toCanonicalKey() shouldBe "song name::artist name"
     }
 
     @Test
-    fun `if name is the same and the any artist is the same then the song is the same`() {
-        val song1 = Song(name, listOf(Artist("Another Artist"), artist))
-        val song2 = Song(name, listOf(artist))
+    fun `toCanonicalKey works with 'featured' and 'featuring'`() {
+        val song = Song(Name("Song Name ft. Guest"), listOf(artist))
+        song.toCanonicalKey() shouldBe "song name::artist name"
 
-        song1 shouldBe song2
+        val song2 = Song(Name("Song Name featuring Guest"), listOf(artist))
+        song2.toCanonicalKey() shouldBe "song name::artist name"
+    }
+
+    @Test
+    fun `toCanonicalKey leaves in 'remix'`() {
+        val song = Song(Name("Song Name (Remix)"), listOf(artist))
+        song.toCanonicalKey() shouldBe "song name (remix)::artist name"
+    }
+
+    @Test
+    fun `toCanonicalKey leaves in 'version'`() {
+        val acousticSong = Song(Name("Song Name (Acoustic Version)"), listOf(artist))
+        acousticSong.toCanonicalKey() shouldBe "song name (acoustic version)::artist name"
+
+        val liveSong = Song(Name("Song Name - Live Version"), listOf(artist))
+        liveSong.toCanonicalKey() shouldBe "song name - live version::artist name"
+
+        val newVersion = Song(Name("Song Name (ATL Version)"), listOf(artist))
+        newVersion.toCanonicalKey() shouldBe "song name (atl version)::artist name"
+
+        val anotherNewVersion = Song(Name("Song Name - Radio Version"), listOf(artist))
+        anotherNewVersion.toCanonicalKey() shouldBe "song name - radio version::artist name"
     }
 }
