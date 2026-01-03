@@ -93,4 +93,28 @@ class PlaylistTest {
             removed = listOf(songA)
         )
     }
+
+    @Test
+    fun `deltaWith returns empty Delta when songs match fuzzy`() {
+        val spotifySong = Song(Name("60cm of Steel"), listOf(Artist("Alpha Wolf"), Artist("Holding Absence")))
+        val ytSong = Song(Name("60cm of Steel"), listOf(Artist("Alpha Wolf")))
+
+        val sourcePlaylist = Playlist(
+            Id("SP1"),
+            Name("My Playlist"),
+            SongDictionary(
+                spotifySong to ServiceIds(Service.SPOTIFY to Id("s1"))
+            )
+        )
+        val targetPlaylist = Playlist(
+            Id("YTP1"),
+            Name("My Playlist"),
+            SongDictionary(
+                ytSong to ServiceIds(Service.YOUTUBE_MUSIC to Id("yt1"))
+            )
+        )
+
+        // Even though canonical keys are different, they should fuzzy match
+        sourcePlaylist.deltaWith(targetPlaylist) shouldBe Delta.empty()
+    }
 }

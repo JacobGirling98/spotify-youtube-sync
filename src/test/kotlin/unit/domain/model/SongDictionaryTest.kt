@@ -2,6 +2,7 @@ package unit.domain.model
 
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.example.domain.model.*
 import kotlin.test.Test
 
@@ -82,5 +83,46 @@ class SongDictionaryTest {
         val otherSong = song.copy(Name("Other song"))
 
         dictionary.ids(otherSong) shouldBe null
+    }
+
+    @Test
+    fun `merges entry with fuzzy matching key and preserves original song data`() {
+        val spotifySong = Song(Name("60cm of Steel"), listOf(Artist("Alpha Wolf"), Artist("Holding Absence")))
+        val ytSong = Song(Name("60cm of Steel"), listOf(Artist("Alpha Wolf"))) // Missing second artist
+
+        val spotifyEntry = SongEntry(spotifySong, ServiceIds(Service.SPOTIFY to Id("s1")))
+        val ytEntry = SongEntry(ytSong, ServiceIds(Service.YOUTUBE_MUSIC to Id("y1")))
+
+        val dictionary = SongDictionary(mapOf(spotifySong.toCanonicalKey() to spotifyEntry))
+        val otherDictionary = SongDictionary(mapOf(ytSong.toCanonicalKey() to ytEntry))
+
+        // Pre-condition: Keys are different
+        spotifySong.toCanonicalKey() shouldNotBe ytSong.toCanonicalKey()
+
+        val merged = dictionary.mergeWith(otherDictionary).shouldBeRight()
+
+        merged.entries.size shouldBe 1
+        val entry = merged.entries.values.first()
+        
+        // Should preserve the original (Spotify) song data
+        entry.song shouldBe spotifySong
+        // Should have both IDs
+        entry.serviceIds shouldBe ServiceIds(
+            Service.SPOTIFY to Id("s1"),
+            Service.YOUTUBE_MUSIC to Id("y1")
+        )
+    }
+
+    @Test
+    fun `does not fuzzy merge if songs are distinct variants`() {
+        val original = Song(Name("Song A"), listOf(Artist("Artist")))
+        val live = Song(Name("Song A (Live)"), listOf(Artist("Artist")))
+
+        val dictionary = SongDictionary(original to ServiceIds(Service.SPOTIFY to Id("1")))
+        val otherDictionary = SongDictionary(live to ServiceIds(Service.YOUTUBE_MUSIC to Id("2")))
+
+        val merged = dictionary.mergeWith(otherDictionary).shouldBeRight()
+
+        merged.entries.size shouldBe 2
     }
 }

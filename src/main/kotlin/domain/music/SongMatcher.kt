@@ -35,31 +35,33 @@ object SongMatcher {
     ).map { Regex(it, RegexOption.IGNORE_CASE) }
 
     fun findBestMatch(original: Song, candidates: List<SongMatchCandidate>): SongMatchCandidate? {
+        return candidates.firstOrNull { candidate -> matches(original, candidate) }
+    }
+
+    fun matches(original: Song, candidate: SongMatchCandidate): Boolean {
         val cleanedOriginalTitle = cleanCoreTitle(original.name.value)
         val originalVersionTags = extractVersionTags(original.name.value)
         val originalArtists = original.artists.map { it.value.lowercase() }.toSet()
 
-        return candidates.firstOrNull { candidate ->
-            val cleanedCandidateTitle = cleanCoreTitle(candidate.title)
-            val candidateVersionTags = extractVersionTags(candidate.title)
-            
-            // Primary Title Match
-            val titleMatches = cleanedOriginalTitle == cleanedCandidateTitle || 
-                               (cleanedCandidateTitle.contains(cleanedOriginalTitle) && cleanedOriginalTitle.isNotBlank()) ||
-                               (cleanedOriginalTitle.contains(cleanedCandidateTitle) && cleanedCandidateTitle.isNotBlank())
+        val cleanedCandidateTitle = cleanCoreTitle(candidate.title)
+        val candidateVersionTags = extractVersionTags(candidate.title)
+
+        // Primary Title Match
+        val titleMatches = cleanedOriginalTitle == cleanedCandidateTitle ||
+                (cleanedCandidateTitle.contains(cleanedOriginalTitle) && cleanedOriginalTitle.isNotBlank()) ||
+                (cleanedOriginalTitle.contains(cleanedCandidateTitle) && cleanedCandidateTitle.isNotBlank())
 
 
-            if (!titleMatches) return@firstOrNull false
+        if (!titleMatches) return false
 
-            // Artist Match
-            val candidateText = (candidate.channelTitle + " " + candidate.title).lowercase()
-            val artistMatches = originalArtists.any { artist -> candidateText.contains(artist) }
+        // Artist Match
+        val candidateText = (candidate.channelTitle + " " + candidate.title).lowercase()
+        val artistMatches = originalArtists.any { artist -> candidateText.contains(artist) }
 
-            if (!artistMatches) return@firstOrNull false
+        if (!artistMatches) return false
 
-            // Version Tag Match - this is crucial for distinguishing
-            originalVersionTags == candidateVersionTags
-        }
+        // Version Tag Match - this is crucial for distinguishing
+        return originalVersionTags == candidateVersionTags
     }
 
     fun cleanCoreTitle(title: String): String {

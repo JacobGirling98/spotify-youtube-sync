@@ -49,6 +49,7 @@ fun syncMusic(
     updatedDictionaryWithErrors.errors.forEach { log.error(it.message ?: "An unknown error occurred") }
 
     val dictionary = updatedDictionaryWithErrors.value
+    songDictionaryRepository.save(dictionary)
 
     sourcePlaylists.forEach { sourcePlaylist ->
         val targetPlaylist = targetPlaylists.find { it.name == sourcePlaylist.name } ?: raise(
@@ -58,17 +59,16 @@ fun syncMusic(
             )
         )
         val delta = sourcePlaylist.deltaWith(targetPlaylist)
-        delta.removed.forEach { song ->
-            val targetServiceSongId =
-                dictionary.ids(song)?.idFor(targetService.service) ?: raise(SongNotFoundError(song, targetService.service))
-            targetService.addSongToPlaylist(targetServiceSongId, targetPlaylist.id)
-        }
-        delta.added.forEach { song ->
-            val targetServiceSongId =
-                dictionary.ids(song)?.idFor(targetService.service) ?: raise(SongNotFoundError(song, targetService.service))
-            targetService.deleteSongFromPlaylist(targetServiceSongId, targetPlaylist.id)
-        }
+        println(delta)
+//        delta.removed.forEach { song ->
+//            val targetServiceSongId =
+//                dictionary.ids(song)?.idFor(targetService.service) ?: raise(SongNotFoundError(song, targetService.service))
+//            targetService.addSongToPlaylist(targetServiceSongId, targetPlaylist.id)
+//        }
+//        delta.added.forEach { song ->
+//            val targetServiceSongId =
+//                dictionary.ids(song)?.idFor(targetService.service) ?: raise(SongNotFoundError(song, targetService.service))
+//            targetService.deleteSongFromPlaylist(targetServiceSongId, targetPlaylist.id)
+//        }
     }
-
-    songDictionaryRepository.save(dictionary)
 }
