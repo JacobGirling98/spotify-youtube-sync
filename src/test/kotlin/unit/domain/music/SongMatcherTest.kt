@@ -159,5 +159,16 @@ class SongMatcherTest {
         val match = SongMatcher.findBestMatch(spotifySong, listOf(ytCandidate))
         match shouldBe null
     }
+
+    @Test
+    fun `real world - matches when source has multiple artists and target has one`() {
+        val spotifySong = Song(Name("60cm of Steel"), listOf(Artist("Alpha Wolf"), Artist("Holding Absence")))
+        // YouTube Music often lists the main artist in the channel/artist field, and sometimes misses features or lists them differently
+        val ytCandidate = SongMatchCandidate(Id("1"), "60cm of Steel", "Alpha Wolf")
+
+        val match = SongMatcher.findBestMatch(spotifySong, listOf(ytCandidate))
+        match.shouldNotBeNull()
+        match.id shouldBe Id("1")
+    }
 }
 
