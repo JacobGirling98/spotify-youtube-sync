@@ -65,4 +65,10 @@ class SongTest {
         val anotherNewVersion = Song(Name("Song Name - Radio Version"), listOf(artist))
         anotherNewVersion.toCanonicalKey() shouldBe CanonicalSongKey("song name - radio version::artist name")
     }
+
+    @Test
+    fun `toCanonicalKey preserves ampersand`() {
+        val song = Song(Name("Rise & Fall"), listOf(Artist("Currents")))
+        song.toCanonicalKey() shouldBe CanonicalSongKey("rise & fall::currents")
+    }
 }

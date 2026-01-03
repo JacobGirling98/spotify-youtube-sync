@@ -74,7 +74,7 @@ object SongMatcher {
         }
 
         // Final polish for core title (remove special chars including parens and hyphens now)
-        text = text.replace(Regex("[^a-z0-9 ]"), " ")
+        text = text.replace(Regex("[^a-z0-9& ]"), " ")
 
         return text.trim().replace(Regex("\\s+"), " ")
     }
@@ -86,7 +86,7 @@ object SongMatcher {
         versionPatterns.forEach { regex ->
             regex.findAll(lowerTitle).forEach { match ->
                 val tag = match.value.lowercase()
-                    .replace(Regex("[^a-z0-9 ]"), "") // Remove punctuation
+                    .replace(Regex("[^a-z0-9& ]"), "") // Remove punctuation
                     .trim()
                 if (tag.isNotBlank()) {
                     tags.add(tag.replace(Regex("\\s+"), " ")) // Normalize spaces and add
@@ -108,8 +108,8 @@ object SongMatcher {
         // Replace intra-word hyphens (e.g. SONG-NAME) with space
         text = text.replace(Regex("(?<=[a-z0-9])-(?=[a-z0-9])"), " ")
 
-        // Replace other special chars but keep parens and hyphens (for versions)
-        text = text.replace(Regex("[^a-z0-9()\\- ]"), " ")
+        // Replace other special chars but keep parens, hyphens and ampersands
+        text = text.replace(Regex("[^a-z0-9()\\-& ]"), " ")
 
         return text.trim().replace(Regex("\\s+"), " ")
     }
