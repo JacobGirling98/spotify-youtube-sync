@@ -10,10 +10,10 @@ data class Song(
         return "${name.value} - ${artists.joinToString { it.value }}"
     }
 
-    fun toCanonicalKey(): String {
+    fun toCanonicalKey(): CanonicalSongKey {
         val cleanedTitle = SongMatcher.cleanTitleForCanonicalKey(this.name.value)
         val artistsKey = this.artists.map { it.value.lowercase() }.sorted().joinToString(",")
         
-        return "$cleanedTitle::$artistsKey"
+        return CanonicalSongKey("$cleanedTitle::$artistsKey")
     }
 }

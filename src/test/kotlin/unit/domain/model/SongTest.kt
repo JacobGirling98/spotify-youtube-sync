@@ -2,6 +2,7 @@ package unit.domain.model
 
 import io.kotest.matchers.shouldBe
 import org.example.domain.model.Artist
+import org.example.domain.model.CanonicalSongKey
 import org.example.domain.model.Name
 import org.example.domain.model.Song
 import kotlin.test.Test
@@ -14,54 +15,54 @@ class SongTest {
     @Test
     fun `toCanonicalKey handles empty artist list`() {
         val song = Song(Name("Instrumental Song"), emptyList())
-        song.toCanonicalKey() shouldBe "instrumental song::"
+        song.toCanonicalKey() shouldBe CanonicalSongKey("instrumental song::")
     }
 
     @Test
     fun `toCanonicalKey normalizes title cases and special characters`() {
         val song = Song(Name("SONG-NAME (Official Video)"), listOf(Artist("ARTIST NAME")))
-        song.toCanonicalKey() shouldBe "song name::artist name"
+        song.toCanonicalKey() shouldBe CanonicalSongKey("song name::artist name")
     }
 
     @Test
     fun `toCanonicalKey works for basic case`() {
         val song = Song(Name("Song Name"), listOf(artist))
-        song.toCanonicalKey() shouldBe "song name::artist name"
+        song.toCanonicalKey() shouldBe CanonicalSongKey("song name::artist name")
     }
 
     @Test
     fun `toCanonicalKey works with 'with' cases`() {
         val song = Song(Name("Song Name (with Guest)"), listOf(artist))
-        song.toCanonicalKey() shouldBe "song name::artist name"
+        song.toCanonicalKey() shouldBe CanonicalSongKey("song name::artist name")
     }
 
     @Test
     fun `toCanonicalKey works with 'featured' and 'featuring'`() {
         val song = Song(Name("Song Name ft. Guest"), listOf(artist))
-        song.toCanonicalKey() shouldBe "song name::artist name"
+        song.toCanonicalKey() shouldBe CanonicalSongKey("song name::artist name")
 
         val song2 = Song(Name("Song Name featuring Guest"), listOf(artist))
-        song2.toCanonicalKey() shouldBe "song name::artist name"
+        song2.toCanonicalKey() shouldBe CanonicalSongKey("song name::artist name")
     }
 
     @Test
     fun `toCanonicalKey leaves in 'remix'`() {
         val song = Song(Name("Song Name (Remix)"), listOf(artist))
-        song.toCanonicalKey() shouldBe "song name (remix)::artist name"
+        song.toCanonicalKey() shouldBe CanonicalSongKey("song name (remix)::artist name")
     }
 
     @Test
     fun `toCanonicalKey leaves in 'version'`() {
         val acousticSong = Song(Name("Song Name (Acoustic Version)"), listOf(artist))
-        acousticSong.toCanonicalKey() shouldBe "song name (acoustic version)::artist name"
+        acousticSong.toCanonicalKey() shouldBe CanonicalSongKey("song name (acoustic version)::artist name")
 
         val liveSong = Song(Name("Song Name - Live Version"), listOf(artist))
-        liveSong.toCanonicalKey() shouldBe "song name - live version::artist name"
+        liveSong.toCanonicalKey() shouldBe CanonicalSongKey("song name - live version::artist name")
 
         val newVersion = Song(Name("Song Name (ATL Version)"), listOf(artist))
-        newVersion.toCanonicalKey() shouldBe "song name (atl version)::artist name"
+        newVersion.toCanonicalKey() shouldBe CanonicalSongKey("song name (atl version)::artist name")
 
         val anotherNewVersion = Song(Name("Song Name - Radio Version"), listOf(artist))
-        anotherNewVersion.toCanonicalKey() shouldBe "song name - radio version::artist name"
+        anotherNewVersion.toCanonicalKey() shouldBe CanonicalSongKey("song name - radio version::artist name")
     }
 }

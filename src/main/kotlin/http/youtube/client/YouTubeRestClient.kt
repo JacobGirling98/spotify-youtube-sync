@@ -122,11 +122,11 @@ class YouTubeRestClient(
             null,
             playlistItemLens
         ).bind()
-        SongDictionary(playlistItems.associate { item ->
+        SongDictionary(*playlistItems.map { item ->
             Song(item.snippet.title, listOf(item.snippet.videoOwnerChannelTitle.value.asArtist())) to ServiceIds(
                 Service.YOUTUBE_MUSIC to item.id
             )
-        })
+        }.toTypedArray())
     }
 
     private fun <T> recursivePagination(

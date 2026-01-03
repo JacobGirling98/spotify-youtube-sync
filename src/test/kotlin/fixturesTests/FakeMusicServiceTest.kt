@@ -65,7 +65,7 @@ class FakeMusicServiceTest {
         result.first().id shouldBe Id("first playlist")
         result.first().name shouldBe Name("first playlist")
         result.first().songs.entries.size shouldBe 1
-        result.first().songs.entries.keys.first() shouldBe firstSong
+        result.first().songs.entries.values.first().song shouldBe firstSong
     }
 
     @Test
@@ -101,7 +101,7 @@ class FakeMusicServiceTest {
         playlist?.songs?.entries?.size shouldBe 2
 
         // Verify the second song is indeed in the playlist
-        val secondSongEntry = tracks.entries.keys.find { it == secondSong }
+        val secondSongEntry = tracks.entries.values.map { it.song }.find { it == secondSong }
         secondSongEntry shouldBe secondSong
     }
 
@@ -119,7 +119,7 @@ class FakeMusicServiceTest {
         playlist?.songs?.entries?.size shouldBe 2
 
         // Verify the second song is indeed in the playlist
-        val newSong = tracks.entries.keys.find { it == thirdSong }
+        val newSong = tracks.entries.values.map { it.song }.find { it == thirdSong }
         newSong shouldBe thirdSong
     }
 

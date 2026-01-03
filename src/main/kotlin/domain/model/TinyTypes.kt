@@ -7,4 +7,7 @@ value class Name(val value: String)
 value class Artist(val value: String)
 
 @JvmInline
+value class CanonicalSongKey(val value: String)
+
+@JvmInline
 value class Id(val value: String)

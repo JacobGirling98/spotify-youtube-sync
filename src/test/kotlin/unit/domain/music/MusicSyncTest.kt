@@ -38,7 +38,7 @@ class MusicSyncTest {
     private val otherPlaylistName = "Other Playlist"
 
     private fun songsFor(service: Service, songs: List<Pair<Song, Id>>) = SongDictionary(
-        songs.associate { (song, id) -> song to ServiceIds(service to id) }
+        *songs.map { (song, id) -> song to ServiceIds(service to id) }.toTypedArray()
     )
 
     private val log = FakeLog()

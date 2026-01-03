@@ -17,15 +17,17 @@ class FakeMusicService(
     allSongs: SongDictionary
 ) : MusicService {
     private val _playlists: MutableMap<Id, Playlist> = playlists.associate { playlist ->
-        val filteredEntries = playlist.songs.entries.mapNotNull { (song, serviceIds) ->
+        val filteredEntries = playlist.songs.entries.mapNotNull { (_, entry) ->
+            val (song, serviceIds) = entry
             serviceIds.entries[service]?.let { id -> song to ServiceIds(service to id) }
-        }.associate { it }
+        }
 
-        val filteredPlaylist = playlist.copy(songs = SongDictionary(filteredEntries))
+        val filteredPlaylist = playlist.copy(songs = SongDictionary(*filteredEntries.toTypedArray()))
         playlist.id to filteredPlaylist
     }.toMutableMap()
 
-    private val _songs: Map<Song, Id> = allSongs.entries.mapNotNull { (song, serviceIds) ->
+    private val _songs: Map<Song, Id> = allSongs.entries.mapNotNull { (_, entry) ->
+        val (song, serviceIds) = entry
         serviceIds.entries[service]?.let { id -> song to id }
     }.toMap()
 
@@ -65,7 +67,7 @@ class FakeMusicService(
         val playlist = _playlists[playlistId] ?: return NotFoundError.left()
         val song = _songsById[songId] ?: return NotFoundError.left()
 
-        val newEntry = song to ServiceIds(service to songId)
+        val newEntry = song.toCanonicalKey() to SongEntry(song, ServiceIds(service to songId))
         val newSongs = playlist.songs.entries + newEntry
 
         _playlists[playlistId] = playlist.copy(songs = SongDictionary(newSongs))
@@ -76,7 +78,7 @@ class FakeMusicService(
         val playlist = _playlists[playlistId] ?: return NotFoundError.left()
         val song = _songsById[songId] ?: return NotFoundError.left()
 
-        val newSongs = playlist.songs.entries - song
+        val newSongs = playlist.songs.entries - song.toCanonicalKey()
         _playlists[playlistId] = playlist.copy(songs = SongDictionary(newSongs))
         return Unit.right()
     }

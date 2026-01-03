@@ -14,7 +14,10 @@ class SongDictionaryTest {
 
     @Test
     fun `can construct via vararg of pairs`() {
-        SongDictionary(mapOf(song to serviceIds)) shouldBe SongDictionary(song to serviceIds)
+        val entry = SongEntry(song, serviceIds)
+        val expected = SongDictionary(mapOf(song.toCanonicalKey() to entry))
+        
+        SongDictionary(song to serviceIds) shouldBe expected
     }
 
     @Test

@@ -15,8 +15,8 @@ data class Playlist(
     val songs: SongDictionary
 ) {
     fun deltaWith(other: Playlist): Delta {
-        val added = other.songs.entries.keys.filter { song -> song !in songs.entries.keys }
-        val removed = songs.entries.keys.filter { song -> song !in other.songs.entries.keys }
+        val added = other.songs.entries.filterKeys { it !in songs.entries.keys }.values.map { it.song }
+        val removed = songs.entries.filterKeys { it !in other.songs.entries.keys }.values.map { it.song }
         return Delta(added, removed)
     }
 }

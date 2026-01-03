@@ -15,7 +15,8 @@ fun List<Playlist>.createDictionary(): Either<MergeError, SongDictionary> = eith
 }
 
 fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorWrapper<SongDictionary> =
-    entries.fold(SongDictionary.empty().withNoErrors()) { wrapper, (song, serviceIds) ->
+    entries.fold(SongDictionary.empty().withNoErrors()) { wrapper, (_, entry) ->
+        val (song, serviceIds) = entry
         if (source !in serviceIds.services || target.service in serviceIds.services) {
             wrapper.value.mergeWith(SongDictionary(song to serviceIds))
                 .accumulateWith(wrapper)
@@ -38,7 +39,7 @@ fun SongDictionary.fillDictionary(source: Service, target: MusicService): ErrorW
         }
     }
 
-fun SongDictionary.subsetOf(other: SongDictionary): SongDictionary = SongDictionary(other.entries.filterKeys { song -> song in entries.keys })
+fun SongDictionary.subsetOf(other: SongDictionary): SongDictionary = SongDictionary(other.entries.filterKeys { key -> key in entries.keys })
 
 private fun <T> Either<Error, T>.accumulateWith(wrapper: ErrorWrapper<T>): ErrorWrapper<T> = fold(
     { ErrorWrapper(wrapper.errors + it, wrapper.value) },
