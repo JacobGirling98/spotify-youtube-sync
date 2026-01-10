@@ -6,15 +6,9 @@ import org.example.config.bodyLens
 import org.example.domain.error.Error
 import org.example.domain.error.HttpError
 import org.example.domain.error.HttpResponseError
-import org.example.domain.error.NoResultsError
-import org.example.domain.model.Artist
+import org.example.domain.model.*
 import org.example.domain.model.Id
 import org.example.domain.model.Playlist
-import org.example.domain.model.PlaylistMetadata
-import org.example.domain.model.Service
-import org.example.domain.model.ServiceIds
-import org.example.domain.model.Song
-import org.example.domain.model.SongDictionary
 import org.example.domain.music.MusicService
 import org.example.http.auth.TokenManager
 import org.example.http.youtube.model.*
@@ -26,8 +20,6 @@ import org.http4k.core.Request
 import org.http4k.core.with
 import org.http4k.lens.BodyLens
 import org.http4k.lens.bearerAuth
-
-import org.example.domain.model.SongMatchCandidate
 
 class YouTubeRestClient(
     private val http: HttpHandler,
@@ -68,6 +60,7 @@ class YouTubeRestClient(
             .query("q", "${song.name.value} ${song.artists.joinToString(" ") { it.value }} official audio")
             .query("part", "snippet,id")
             .query("type", "video")
+            .query("limit", "10")
         val response = http(request)
 
         if (!response.status.successful) raise(HttpResponseError.from(response))

@@ -2,6 +2,7 @@ package org.example.domain.music
 
 import org.example.domain.model.Song
 import org.example.domain.model.SongMatchCandidate
+import org.http4k.urlDecoded
 
 object SongMatcher {
 
@@ -81,7 +82,7 @@ object SongMatcher {
 
     internal fun extractVersionTags(title: String): Set<String> {
         val tags = mutableSetOf<String>()
-        val lowerTitle = title.lowercase()
+        val lowerTitle = decodeHtmlEntities(title).lowercase()
 
         versionPatterns.forEach { regex ->
             regex.findAll(lowerTitle).forEach { match ->
@@ -97,7 +98,7 @@ object SongMatcher {
     }
 
     fun cleanTitleForCanonicalKey(title: String): String {
-        var text = title.lowercase()
+        var text = decodeHtmlEntities(title).lowercase()
 
         commonNoisePatterns.forEach { regex ->
             text = text.replace(regex, "")
@@ -111,6 +112,22 @@ object SongMatcher {
         // Replace other special chars but keep parens, hyphens and ampersands
         text = text.replace(Regex("[^a-z0-9()\\-& ]"), " ")
 
+        text = text.urlDecoded()
+
         return text.trim().replace(Regex("\\s+"), " ")
+    }
+
+    private fun decodeHtmlEntities(text: String): String {
+        return text
+            .replace("&amp;", "&")
+            .replace("&#38;", "&")
+            .replace("&#39;", "'")
+            .replace("&apos;", "'")
+            .replace("&quot;", "\"")
+            .replace("&#34;", "\"")
+            .replace("&lt;", "<")
+            .replace("&#60;", "<")
+            .replace("&gt;", ">")
+            .replace("&#62;", ">")
     }
 }

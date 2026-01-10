@@ -5,7 +5,6 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.raise.either
 import org.example.domain.error.Error
-import org.example.domain.error.NotFoundError
 import org.example.domain.error.PlaylistNotFoundError
 import org.example.domain.error.SongNotFoundError
 import org.example.domain.model.Name
@@ -60,15 +59,26 @@ fun syncMusic(
         )
         val delta = sourcePlaylist.deltaWith(targetPlaylist)
         println(delta)
-//        delta.removed.forEach { song ->
-//            val targetServiceSongId =
-//                dictionary.ids(song)?.idFor(targetService.service) ?: raise(SongNotFoundError(song, targetService.service))
-//            targetService.addSongToPlaylist(targetServiceSongId, targetPlaylist.id)
-//        }
-//        delta.added.forEach { song ->
-//            val targetServiceSongId =
-//                dictionary.ids(song)?.idFor(targetService.service) ?: raise(SongNotFoundError(song, targetService.service))
-//            targetService.deleteSongFromPlaylist(targetServiceSongId, targetPlaylist.id)
-//        }
+//        exitProcess(0)
+        delta.removed.forEach { song ->
+            val targetServiceSongId =
+                dictionary.ids(song)?.idFor(targetService.service) ?: raise(
+                    SongNotFoundError(
+                        song,
+                        targetService.service
+                    )
+                )
+            targetService.addSongToPlaylist(targetServiceSongId, targetPlaylist.id)
+        }
+        delta.added.forEach { song ->
+            val targetServiceSongId =
+                dictionary.ids(song)?.idFor(targetService.service) ?: raise(
+                    SongNotFoundError(
+                        song,
+                        targetService.service
+                    )
+                )
+            targetService.deleteSongFromPlaylist(targetServiceSongId, targetPlaylist.id)
+        }
     }
 }
