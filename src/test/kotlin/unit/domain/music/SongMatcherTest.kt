@@ -3,8 +3,75 @@ package unit.domain.music
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.example.domain.model.*
+import org.example.domain.music.SongMatcher.cleanTitleForCanonicalKey
 import org.example.domain.music.SongMatcher.findBestMatch
 import kotlin.test.Test
+
+class CleanTitleForCanonicalKeyTest {
+
+    @Test
+    fun `basic title remains the same`() {
+        cleanTitleForCanonicalKey("my title") shouldBe "my title"
+    }
+
+    @Test
+    fun `removes common noise patterns`() {
+        cleanTitleForCanonicalKey("my title [random]") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title (official audio)") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title - topic") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title lyrics") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title official video") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title official audio") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title mv") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title (feat other)") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title (with other)") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title ft. other") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title featuring other") shouldBe "my title"
+    }
+
+    @Test
+    fun `removes apostrophes`() {
+        cleanTitleForCanonicalKey("artist's song") shouldBe "artists song"
+    }
+
+    @Test
+    fun `replaces intra-word hyphens with space`() {
+        cleanTitleForCanonicalKey("my-title") shouldBe "my title"
+    }
+
+    @Test
+    fun `replaces other special characters except for parenthesis, hyphens and ampersands`() {
+        cleanTitleForCanonicalKey("my title _") shouldBe "my title"
+        cleanTitleForCanonicalKey("my title ()") shouldBe "my title ()"
+        cleanTitleForCanonicalKey("my title -") shouldBe "my title -"
+        cleanTitleForCanonicalKey("my title &") shouldBe "my title &"
+    }
+
+    @Test
+    fun `decodes html entities`() {
+        cleanTitleForCanonicalKey("my title &amp;") shouldBe "my title &"
+        cleanTitleForCanonicalKey("my title &#38;") shouldBe "my title &"
+        cleanTitleForCanonicalKey("my title &#39;") shouldBe "my title" // '
+        cleanTitleForCanonicalKey("my title &apos;") shouldBe "my title" // '
+        cleanTitleForCanonicalKey("my title &quot;") shouldBe "my title" // "
+        cleanTitleForCanonicalKey("my title &#34;") shouldBe "my title" // "
+        cleanTitleForCanonicalKey("my title &lt;") shouldBe "my title" // <
+        cleanTitleForCanonicalKey("my title &#60;") shouldBe "my title" // <
+        cleanTitleForCanonicalKey("my title &gt;") shouldBe "my title" // >
+        cleanTitleForCanonicalKey("my title &#62;") shouldBe "my title" // >
+    }
+
+    @Test
+    fun `trims the title`() {
+        cleanTitleForCanonicalKey(" my title ") shouldBe "my title"
+    }
+
+    @Test
+    fun `lowercases the title`() {
+        cleanTitleForCanonicalKey("My Title") shouldBe "my title"
+    }
+}
+
 
 class SongMatcherTest {
 

@@ -2,7 +2,6 @@ package org.example.domain.music
 
 import org.example.domain.model.Song
 import org.example.domain.model.SongMatchCandidate
-import org.http4k.urlDecoded
 
 object SongMatcher {
 
@@ -68,7 +67,7 @@ object SongMatcher {
     fun cleanCoreTitle(title: String): String {
         // Start by cleaning for canonical key (removes noise, keeps versions)
         var text = cleanTitleForCanonicalKey(title)
-        
+
         // Then remove versions
         versionPatterns.forEach { regex ->
             text = text.replace(regex, "")
@@ -82,7 +81,7 @@ object SongMatcher {
 
     internal fun extractVersionTags(title: String): Set<String> {
         val tags = mutableSetOf<String>()
-        val lowerTitle = decodeHtmlEntities(title).lowercase()
+        val lowerTitle = title.decodeHtmlEntities().lowercase()
 
         versionPatterns.forEach { regex ->
             regex.findAll(lowerTitle).forEach { match ->
@@ -97,37 +96,25 @@ object SongMatcher {
         return tags
     }
 
-    fun cleanTitleForCanonicalKey(title: String): String {
-        var text = decodeHtmlEntities(title).lowercase()
+    fun cleanTitleForCanonicalKey(title: String): String = title
+        .decodeHtmlEntities()
+        .lowercase()
+        .let { title -> commonNoisePatterns.fold(title) { title, regex -> title.replace(regex, "") } }
+        .replace("'", "")
+        .replace(Regex("(?<=[a-z0-9])-(?=[a-z0-9])"), " ")
+        .replace(Regex("[^a-z0-9()\\-& ]"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
 
-        commonNoisePatterns.forEach { regex ->
-            text = text.replace(regex, "")
-        }
-
-        // Normalize special characters
-        text = text.replace("'", "") // Remove apostrophes
-        // Replace intra-word hyphens (e.g. SONG-NAME) with space
-        text = text.replace(Regex("(?<=[a-z0-9])-(?=[a-z0-9])"), " ")
-
-        // Replace other special chars but keep parens, hyphens and ampersands
-        text = text.replace(Regex("[^a-z0-9()\\-& ]"), " ")
-
-        text = text.urlDecoded()
-
-        return text.trim().replace(Regex("\\s+"), " ")
-    }
-
-    private fun decodeHtmlEntities(text: String): String {
-        return text
-            .replace("&amp;", "&")
-            .replace("&#38;", "&")
-            .replace("&#39;", "'")
-            .replace("&apos;", "'")
-            .replace("&quot;", "\"")
-            .replace("&#34;", "\"")
-            .replace("&lt;", "<")
-            .replace("&#60;", "<")
-            .replace("&gt;", ">")
-            .replace("&#62;", ">")
-    }
+    private fun String.decodeHtmlEntities(): String = this
+        .replace("&amp;", "&")
+        .replace("&#38;", "&")
+        .replace("&#39;", "'")
+        .replace("&apos;", "'")
+        .replace("&quot;", "\"")
+        .replace("&#34;", "\"")
+        .replace("&lt;", "<")
+        .replace("&#60;", "<")
+        .replace("&gt;", ">")
+        .replace("&#62;", ">")
 }
