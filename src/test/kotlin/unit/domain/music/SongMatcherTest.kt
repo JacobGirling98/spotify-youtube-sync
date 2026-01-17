@@ -1,12 +1,34 @@
 package unit.domain.music
 
+import fixtures.data.artist
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.example.domain.model.*
+import org.example.domain.music.MatchResult
 import org.example.domain.music.SongMatcher.cleanCoreTitle
 import org.example.domain.music.SongMatcher.cleanTitleForCanonicalKey
 import org.example.domain.music.SongMatcher.findBestMatch
+import org.example.domain.music.SongMatcher.matches2
 import kotlin.test.Test
+
+class SongMatcherAcceptanceTest {
+
+    @Test
+    fun `exact matching`() {
+        val original = Song(Name("My Song"), listOf(artist("David Brent")))
+        val candidate = SongMatchCandidate(Id("1"), "My Song", "David Brent")
+
+        matches2(original, candidate) shouldBe MatchResult(
+            titleMatches = true,
+            allArtistsMatch = true,
+            atLeastOneArtistMatches = true,
+            versionTagMatches = true
+        )
+    }
+
+
+}
+
 
 class CleanTitleForCanonicalKeyTest {
 
@@ -200,7 +222,7 @@ class SongMatcherTest {
         val match = findBestMatch(spotifySong, listOf(ytCandidate))
         match.shouldNotBeNull()
     }
-    
+
     @Test
     fun `real world - matches different version tags (ATL's Version)`() {
         val spotifySong = Song(Name("Dear Maria, Count Me In - ATL's Version"), listOf(Artist("All Time Low")))
@@ -209,7 +231,7 @@ class SongMatcherTest {
         val match = findBestMatch(spotifySong, listOf(ytCandidate))
         match.shouldNotBeNull()
     }
-    
+
     @Test
     fun `real world - matches different version tags (Taylor's Version)`() {
         val spotifySong = Song(Name("Love Story (Taylor’s Version)"), listOf(Artist("Taylor Swift")))
@@ -221,7 +243,10 @@ class SongMatcherTest {
 
     @Test
     fun `real world - matches remixes or not`() {
-        val spotifySong = Song(Name("Save Your Tears (with Ariana Grande) (Remix)"), listOf(Artist("The Weeknd"), Artist("Ariana Grande")))
+        val spotifySong = Song(
+            Name("Save Your Tears (with Ariana Grande) (Remix)"),
+            listOf(Artist("The Weeknd"), Artist("Ariana Grande"))
+        )
         val ytCandidate = SongMatchCandidate(Id("1"), "Save Your Tears (Remix)", "The Weeknd")
 
         val match = findBestMatch(spotifySong, listOf(ytCandidate))

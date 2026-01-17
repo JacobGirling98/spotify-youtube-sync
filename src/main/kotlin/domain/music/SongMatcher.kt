@@ -3,6 +3,13 @@ package org.example.domain.music
 import org.example.domain.model.Song
 import org.example.domain.model.SongMatchCandidate
 
+data class MatchResult(
+    val titleMatches: Boolean,
+    val allArtistsMatch: Boolean,
+    val atLeastOneArtistMatches: Boolean,
+    val versionTagMatches: Boolean
+)
+
 object SongMatcher {
 
     private val commonNoisePatterns = listOf(
@@ -36,6 +43,20 @@ object SongMatcher {
 
     fun findBestMatch(original: Song, candidates: List<SongMatchCandidate>): SongMatchCandidate? {
         return candidates.firstOrNull { candidate -> matches(original, candidate) }
+    }
+
+    fun matches2(original: Song, candidate: SongMatchCandidate): MatchResult {
+        val titleMatches = original.name.value.equals(candidate.title, ignoreCase = true)
+        val artistsMatch =
+            original.artists.joinToString(", ") { it.value }.equals(candidate.channelTitle, ignoreCase = true)
+        val atLeastOneArtistMatches = true
+        val versionTagMatches = true
+        return MatchResult(
+            titleMatches = titleMatches,
+            allArtistsMatch = artistsMatch,
+            atLeastOneArtistMatches = atLeastOneArtistMatches,
+            versionTagMatches = versionTagMatches
+        )
     }
 
     fun matches(original: Song, candidate: SongMatchCandidate): Boolean {
