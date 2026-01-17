@@ -26,10 +26,10 @@ object SongMatcher {
         " - acoustic.*?",
         "\\(live.*?\\)",
         " - live",
-        "\\(taylor.s version\\)",
-        " - taylor.s version",
-        "\\(atl.s version\\)",
-        " - atl.s version",
+        "\\(taylor(?:'|\\s)*s version\\)",
+        " - taylor(?:'|\\s)*s version",
+        "\\(atl(?:'|\\s)*s version\\)",
+        " - atl(?:'|\\s)*s version",
         "\\(from the room below\\)",
         " - from the room below"
     ).map { Regex(it, RegexOption.IGNORE_CASE) }
@@ -65,16 +65,13 @@ object SongMatcher {
     }
 
     fun cleanCoreTitle(title: String): String {
-        // Start by cleaning for canonical key (removes noise, keeps versions)
         var text = cleanTitleForCanonicalKey(title)
 
-        // Then remove versions
         versionPatterns.forEach { regex ->
             text = text.replace(regex, "")
         }
 
         // Final polish for core title (remove special chars including parens and hyphens now)
-        text = text.replace(Regex("[^a-z0-9& ]"), " ")
 
         return text.trim().replace(Regex("\\s+"), " ")
     }

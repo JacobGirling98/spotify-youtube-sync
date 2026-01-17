@@ -3,6 +3,7 @@ package unit.domain.music
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.example.domain.model.*
+import org.example.domain.music.SongMatcher.cleanCoreTitle
 import org.example.domain.music.SongMatcher.cleanTitleForCanonicalKey
 import org.example.domain.music.SongMatcher.findBestMatch
 import kotlin.test.Test
@@ -69,6 +70,24 @@ class CleanTitleForCanonicalKeyTest {
     @Test
     fun `lowercases the title`() {
         cleanTitleForCanonicalKey("My Title") shouldBe "my title"
+    }
+}
+
+class CleanCoreTitleTest {
+    @Test
+    fun `removes versions from the title`() {
+        cleanCoreTitle("my song (remix)") shouldBe "my song"
+        cleanCoreTitle("my song - remix") shouldBe "my song"
+        cleanCoreTitle("my song (acoustic version)") shouldBe "my song"
+        cleanCoreTitle("my song - acoustic") shouldBe "my song"
+        cleanCoreTitle("my song (live)") shouldBe "my song"
+        cleanCoreTitle("my song - live") shouldBe "my song"
+        cleanCoreTitle("my song (taylor s version)") shouldBe "my song"
+        cleanCoreTitle("my song - taylor s version") shouldBe "my song"
+        cleanCoreTitle("my song (atl s version)") shouldBe "my song"
+        cleanCoreTitle("my song - atl s version") shouldBe "my song"
+        cleanCoreTitle("my song (from the room below)") shouldBe "my song"
+        cleanCoreTitle("my song - from the room below") shouldBe "my song"
     }
 }
 
