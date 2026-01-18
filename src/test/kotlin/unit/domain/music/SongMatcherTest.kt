@@ -15,17 +15,185 @@ class SongMatcherAcceptanceTest {
 
     @Test
     fun `exact matching`() {
-        val original = Song(Name("My Song"), listOf(artist("David Brent")))
-        val candidate = SongMatchCandidate(Id("1"), "My Song", "David Brent")
-
-        matches2(original, candidate) shouldBe MatchResult(
-            titleMatches = true,
-            allArtistsMatch = true,
-            atLeastOneArtistMatches = true,
-            versionTagMatches = true
+        runBidirectionalMatching(
+            name = "My Song",
+            otherName = "My Song",
+            artists = listOf("David Brent"),
+            otherArtists = "David Brent",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = true,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
         )
     }
 
+    @Test
+    fun `case insensitive matching`() {
+        runBidirectionalMatching(
+            name = "My Song",
+            otherName = "my song",
+            artists = listOf("David Brent"),
+            otherArtists = "david brent",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = true,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `multiple artists`() {
+        runBidirectionalMatching(
+            name = "My Song",
+            otherName = "My Song",
+            artists = listOf("David Brent", "Foregone Conclusion"),
+            otherArtists = "David Brent",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = false,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `multiple artists from the candidate`() {
+        runBidirectionalMatching(
+            name = "My Song",
+            otherName = "My Song",
+            artists = listOf("David Brent"),
+            otherArtists = "David Brent, Foregone Conclusion",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = false,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `multiple artists from the candidate, ampersand separator`() {
+        runBidirectionalMatching(
+            name = "My Song",
+            otherName = "My Song",
+            artists = listOf("David Brent"),
+            otherArtists = "David Brent & Foregone Conclusion",
+            otherArtistsSeparator = " & ",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = false,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `multiple artists from the candidate, hyphen separator`() {
+        runBidirectionalMatching(
+            name = "My Song",
+            otherName = "My Song",
+            artists = listOf("David Brent"),
+            otherArtists = "David Brent - Foregone Conclusion",
+            otherArtistsSeparator = " - ",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = false,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `ampersand and 'and' are interchangeable`() {
+        // Covers both directions (Rise and Fall <-> Rise & Fall)
+        runBidirectionalMatching(
+            name = "Rise and Fall",
+            otherName = "Rise & Fall",
+            artists = listOf("David Brent"),
+            otherArtists = "David Brent",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = true,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `apostrophe's are ignored`() {
+        runBidirectionalMatching(
+            name = "David's Song",
+            otherName = "Davids Song",
+            artists = listOf("David Brent"),
+            otherArtists = "David Brent",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = true,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `featuring in the name is handled`() {
+        runBidirectionalMatching(
+            name = "My Song (feat. Foregone Conclusion)",
+            otherName = "My Song",
+            artists = listOf("David Brent", "Foregone Conclusion"),
+            otherArtists = "David Brent & Foregone Conclusion",
+            otherArtistsSeparator = " & ",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = true,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    @Test
+    fun `featuring does not match if no mention of other artist`() {
+        runBidirectionalMatching(
+            name = "My Song (feat. Foregone Conclusion)",
+            otherName = "My Song",
+            artists = listOf("David Brent", "Foregone Conclusion"),
+            otherArtists = "David Brent",
+            matchResult = MatchResult(
+                titleMatches = true,
+                allArtistsMatch = false,
+                atLeastOneArtistMatches = true,
+                versionTagMatches = true
+            )
+        )
+    }
+
+    private fun runBidirectionalMatching(
+        name: String,
+        otherName: String,
+        artists: List<String>,
+        otherArtists: String,
+        matchResult: MatchResult,
+        otherArtistsSeparator: String = ", "
+    ) {
+        val original = Song(Name(name), artists.map { artist(it) })
+        val candidate = SongMatchCandidate(Id("1"), otherName, otherArtists)
+
+        val otherOriginal = Song(Name(otherName), otherArtists.split(otherArtistsSeparator).map { artist(it) })
+        val otherCandidate = SongMatchCandidate(Id("1"), name, artists.joinToString(", "))
+
+        matches2(original, candidate) shouldBe matchResult
+        matches2(otherOriginal, otherCandidate) shouldBe matchResult
+    }
 
 }
 
@@ -303,4 +471,3 @@ class SongMatcherTest {
         findBestMatch(otherSpotifySong, listOf(otherYtCandidate))?.id shouldBe Id("2")
     }
 }
-
