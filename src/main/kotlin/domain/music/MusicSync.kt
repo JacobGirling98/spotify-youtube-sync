@@ -58,7 +58,7 @@ fun syncMusic(
             )
         )
         val delta = sourcePlaylist.deltaWith(targetPlaylist)
-        println(delta)
+//        println(delta)
 //        exitProcess(0)
         delta.removed.forEach { song ->
             val targetServiceSongId =

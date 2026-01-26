@@ -10,6 +10,7 @@ data class PlaylistItem(
 
 data class PlaylistItemSnippet(
     val title: Name,
+    val resourceId: ResourceId,
     val videoOwnerChannelId: Id,
     val videoOwnerChannelTitle: Name
 )
@@ -24,5 +25,6 @@ data class PlaylistItemSnippetRequest(
 )
 
 data class ResourceId(
-    val videoId: Id
+    val videoId: Id,
+    val kind: String = "youtube#video"
 )

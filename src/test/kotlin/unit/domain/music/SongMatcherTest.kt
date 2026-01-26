@@ -451,6 +451,18 @@ class SongMatcherTest {
     }
 
     @Test
+    fun `reproduction - matches rock version with different syntax`() {
+        val spotifySong = Song(
+            Name("La La Land (feat. Nita Strauss) - Rock Version"),
+            listOf(Artist("Demi Lovato"), Artist("Nita Strauss"))
+        )
+        val ytCandidate = SongMatchCandidate(Id("1"), "La La Land (Rock Version)", "Demi Lovato")
+
+        val match = findBestMatch(spotifySong, listOf(ytCandidate))
+        match.shouldNotBeNull()
+    }
+
+    @Test
     fun `real world - covers do not match`() {
         val spotifySong = Song(Name("Wonderwall - Spotify Singles"), listOf(Artist("Bring Me The Horizon")))
         val ytCandidate = SongMatchCandidate(Id("1"), "Wonderwalls", "Oasis")

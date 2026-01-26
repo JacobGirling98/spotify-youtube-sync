@@ -14,7 +14,7 @@ fun youTubePlaylistItems(songName: String, artist: String, id: String, next: Str
     {
       "kind": "youtube#playlistItem",
       "etag": "biKiru_-t7KsuiDJ4UA3tfz-biI",
-      "id": "$id",
+      "id": "playlist-item-id",
       "snippet": {
         "publishedAt": "2025-04-29T10:04:44.04884Z",
         "channelId": "UCjg5Kq3qiHNmsxBeY2z-2gQ",
@@ -51,7 +51,11 @@ fun youTubePlaylistItems(songName: String, artist: String, id: String, next: Str
         "playlistId": "1234",
         "position": 0,
         "videoOwnerChannelTitle": "$artist",
-        "videoOwnerChannelId": "1234"
+        "videoOwnerChannelId": "1234",
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "$id"
+        }
       }
     }
   ]

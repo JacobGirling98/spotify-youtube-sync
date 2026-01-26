@@ -33,6 +33,8 @@ object SongMatcher {
         " - acoustic.*?",
         "\\(live.*?\\)",
         " - live",
+        "\\(rock version\\)",
+        " - rock version",
         "\\(taylor(?:'|\\s)*s version\\)",
         " - taylor(?:'|\\s)*s version",
         "\\(atl(?:'|\\s)*s version\\)",
@@ -93,6 +95,7 @@ object SongMatcher {
         }
 
         // Final polish for core title (remove special chars including parens and hyphens now)
+        text = text.replace(Regex("""[()\-]"""), " ")
 
         return text.trim().replace(Regex("\\s+"), " ")
     }

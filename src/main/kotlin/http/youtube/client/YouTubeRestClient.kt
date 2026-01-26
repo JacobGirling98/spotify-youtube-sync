@@ -117,7 +117,7 @@ class YouTubeRestClient(
         ).bind()
         SongDictionary(*playlistItems.map { item ->
             Song(item.snippet.title, listOf(item.snippet.videoOwnerChannelTitle.value.asArtist())) to ServiceIds(
-                Service.YOUTUBE_MUSIC to item.id
+                Service.YOUTUBE_MUSIC to item.snippet.resourceId.videoId
             )
         }.toTypedArray())
     }

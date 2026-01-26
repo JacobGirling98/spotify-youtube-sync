@@ -316,7 +316,7 @@ class YouTubeRestClientTest {
     @Test
     fun `can add a song to a playlist`() {
         val http: HttpHandler = { request ->
-            request shouldHaveBody """{"snippet":{"playlistId":"playlist-id","resourceId":{"videoId":"song-id"}}}"""
+            request shouldHaveBody """{"snippet":{"playlistId":"playlist-id","resourceId":{"videoId":"song-id","kind":"youtube#video"}}}"""
             request.query("part") shouldBe "snippet"
             Response(OK)
         }
