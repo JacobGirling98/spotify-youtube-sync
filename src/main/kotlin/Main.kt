@@ -38,7 +38,13 @@ fun main() {
         log.info(youTubeRedirectUri)
 
         Thread.sleep(Duration.ofSeconds(20))
-        syncMusic(properties.playlists, spotifyClient, youTubeRestClient, songDictionaryRepository, log)
+        syncMusic(
+            properties.playlists,
+            spotifyClient,
+            youTubeRestClient,
+            songDictionaryRepository,
+            log
+        ).onLeft { e -> log.error(e.message ?: e.toString()) }
     }
 }
 

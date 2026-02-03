@@ -40,7 +40,13 @@ object SongMatcher {
         "\\(atl(?:'|\\s)*s version\\)",
         " - atl(?:'|\\s)*s version",
         "\\(from the room below\\)",
-        " - from the room below"
+        " - from the room below",
+        "\\bshort cover\\b",
+        "\\bcover by\\b",
+        "\\bfestival\\b",
+        "\\b4k\\b",
+        "\\buhd\\b",
+        "\\b60fps\\b"
     ).map { Regex(it, RegexOption.IGNORE_CASE) }
 
     fun findBestMatch(original: Song, candidates: List<SongMatchCandidate>): SongMatchCandidate? {
@@ -48,14 +54,28 @@ object SongMatcher {
     }
 
     fun matches2(original: Song, candidate: SongMatchCandidate): MatchResult {
-        val titleMatches = original.name.value.equals(candidate.title, ignoreCase = true)
-        val artistsMatch =
+        val cleanedOriginalTitle = cleanCoreTitle(original.name.value)
+        val originalVersionTags = extractVersionTags(original.name.value)
+        val originalArtists = original.artists.map { it.value.lowercase() }.toSet()
+
+        val cleanedCandidateTitle = cleanCoreTitle(candidate.title)
+        val candidateVersionTags = extractVersionTags(candidate.title)
+
+        val titleMatches = cleanedOriginalTitle == cleanedCandidateTitle ||
+                (cleanedCandidateTitle.contains(cleanedOriginalTitle) && cleanedOriginalTitle.isNotBlank()) ||
+                (cleanedOriginalTitle.contains(cleanedCandidateTitle) && cleanedCandidateTitle.isNotBlank())
+
+        val candidateText = (candidate.channelTitle + " " + candidate.title).lowercase()
+        val atLeastOneArtistMatches = originalArtists.any { artist -> candidateText.contains(artist) }
+
+        val versionTagMatches = originalVersionTags == candidateVersionTags
+
+        val allArtistsMatch =
             original.artists.joinToString(", ") { it.value }.equals(candidate.channelTitle, ignoreCase = true)
-        val atLeastOneArtistMatches = true
-        val versionTagMatches = true
+
         return MatchResult(
             titleMatches = titleMatches,
-            allArtistsMatch = artistsMatch,
+            allArtistsMatch = allArtistsMatch,
             atLeastOneArtistMatches = atLeastOneArtistMatches,
             versionTagMatches = versionTagMatches
         )

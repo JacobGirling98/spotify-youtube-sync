@@ -286,7 +286,7 @@ class MusicSyncTest {
     }
 
     @Test
-    fun `returns SongNotFoundError if a song to add cannot be found in the dictionary for the target service`() {
+    fun `logs SongNotFoundError if a song to add cannot be found in the dictionary for the target service`() {
         val spotifyPlaylist = playlist(
             spotifyPlaylistIdA,
             playlistName,
@@ -300,12 +300,8 @@ class MusicSyncTest {
         // So if search fails, it logs error but continues.
         // If search failed, the ID is still missing in dictionary.
         // Then `dictionary.ids(song)?.idFor(targetService.service)` returns null.
-        // Then it raises SongNotFoundError.
+        // Then it logs SongNotFoundError.
 
-        // To simulate this, we need a dictionary that definitely lacks the ID, and ensure search doesn't find it.
-        // FakeMusicService search uses `allSongs`.
-        // So if we remove the YouTube ID from `allSongs`, search will fail (NoResultsError).
-        
         val limitedAllSongs = SongDictionary(
             songA to ServiceIds(SPOTIFY to spotifySongIdA) // YouTube ID missing
         )
@@ -324,6 +320,7 @@ class MusicSyncTest {
             log = log
         )
 
-        result shouldBe arrow.core.Either.Left(org.example.domain.error.SongNotFoundError(songA, YOUTUBE_MUSIC))
+        result.shouldBeRight()
+        log.messages.any { it.contains("Song ${songA.name.value} not found in ${YOUTUBE_MUSIC.name}") } shouldBe true
     }
 }

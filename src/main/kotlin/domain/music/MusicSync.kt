@@ -50,6 +50,7 @@ fun syncMusic(
     val dictionary = updatedDictionaryWithErrors.value
     songDictionaryRepository.save(dictionary)
 
+    val syncErrors = mutableListOf<Error>()
     sourcePlaylists.forEach { sourcePlaylist ->
         val targetPlaylist = targetPlaylists.find { it.name == sourcePlaylist.name } ?: raise(
             PlaylistNotFoundError(
@@ -58,27 +59,24 @@ fun syncMusic(
             )
         )
         val delta = sourcePlaylist.deltaWith(targetPlaylist)
-//        println(delta)
-//        exitProcess(0)
+
         delta.removed.forEach { song ->
-            val targetServiceSongId =
-                dictionary.ids(song)?.idFor(targetService.service) ?: raise(
-                    SongNotFoundError(
-                        song,
-                        targetService.service
-                    )
-                )
-            targetService.addSongToPlaylist(targetServiceSongId, targetPlaylist.id)
+            val targetServiceSongId = dictionary.ids(song)?.idFor(targetService.service)
+            if (targetServiceSongId != null) {
+                targetService.addSongToPlaylist(targetServiceSongId, targetPlaylist.id)
+            } else {
+                syncErrors.add(SongNotFoundError(song, targetService.service))
+            }
         }
         delta.added.forEach { song ->
-            val targetServiceSongId =
-                dictionary.ids(song)?.idFor(targetService.service) ?: raise(
-                    SongNotFoundError(
-                        song,
-                        targetService.service
-                    )
-                )
-            targetService.deleteSongFromPlaylist(targetServiceSongId, targetPlaylist.id)
+            val targetServiceSongId = dictionary.ids(song)?.idFor(targetService.service)
+            if (targetServiceSongId != null) {
+                targetService.deleteSongFromPlaylist(targetServiceSongId, targetPlaylist.id)
+            } else {
+                syncErrors.add(SongNotFoundError(song, targetService.service))
+            }
         }
     }
+
+    syncErrors.forEach { log.error(it.message ?: "An unknown error occurred") }
 }
